@@ -1,35 +1,35 @@
 # SCUM Tools
 
-Ferramentas gratuitas, feitas por jogador, para o **SCUM**.
+Free tools for **SCUM**, made by a player.
 
-## Hack do Bunker
+## Bunker Hack
 
-**Use aqui: https://forestus.github.io/scum-tools/**
+**Use it here: https://forestus.github.io/scum-tools/**
 
-Resolve o painel de hack da porta dos bunkers abandonados: você tira um print da tela do hack, cola na página e ela mostra quais interruptores ligar.
+Solves the hacking panel on abandoned bunker doors: take a screenshot of the hacking screen, paste it into the page, and it shows you which switches to turn on.
 
-### Como usar
+### How to use
 
-1. No jogo, abra o painel de hack da porta e aperte **Print Screen**.
-2. Volte para a página e aperte **Ctrl+V**. Não precisa salvar nem recortar o print.
-3. Ligue os interruptores marcados em verde, confira se os visores mostram os números indicados e **puxe a alavanca**.
+1. In game, open the door's hacking panel and press **Print Screen**.
+2. Go back to the page and press **Ctrl+V**. No need to save or crop the screenshot.
+3. Turn on the switches marked in green, check that the displays show the indicated numbers, and **pull the lever**.
 
-No celular, use o botão **Do celular** para escolher a foto. Se o print não for reconhecido, dá para preencher os números à mão: toque em cada casa e escolha a conta.
+On mobile, use the **Do celular** (from phone) button to pick the photo. If the screenshot isn't recognized, you can fill in the numbers by hand: tap each cell and choose the operation.
 
-### Privacidade e segurança
+### Privacy and safety
 
-- O print é lido **no seu próprio navegador**. Nenhuma imagem é enviada para servidor.
-- A página **não mexe no jogo**: não lê memória, não aperta teclas, não instala nada. Ela só faz a conta. Quem liga os interruptores é você.
-- O código é todo aberto, neste repositório.
+- The screenshot is read **in your own browser**. No image is sent to any server.
+- The page **does not touch the game**: it doesn't read memory, press keys, or install anything. It only does the math. You flip the switches yourself.
+- All the code is open, in this repository.
 
-### Acessibilidade
+### Accessibility
 
-A página funciona com teclado e leitor de tela, se adapta a celular, tablet e desktop e respeita as preferências de reduzir animações e de alto contraste do sistema.
+The page works with keyboard and screen readers, adapts to phone, tablet and desktop, and respects the system's reduced-motion and high-contrast settings.
 
-## Apoie
+## Support
 
-A ferramenta é e vai continuar grátis. Se ela te ajudou, dá para apoiar pelo botão **Pix** no topo da página.
+The tool is and will stay free. If it helped you, you can support it through the **Pix** button at the top of the page (Pix is Brazil's instant payment system).
 
-## Aviso
+## Disclaimer
 
-Projeto de fã, sem relação com os desenvolvedores ou a distribuidora do SCUM. SCUM e as imagens do jogo pertencem aos seus donos.
+Fan project, not affiliated with SCUM's developers or publisher. SCUM and the game's images belong to their respective owners.
