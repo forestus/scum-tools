@@ -20,7 +20,7 @@ On mobile, use the **Do celular** (from phone) button to pick the photo. If the 
 
 - The screenshot is read **in your own browser**. No image is sent to any server.
 - The page **does not touch the game**: it doesn't read memory, press keys, or install anything. It only does the math. You flip the switches yourself.
-- All the code is open, in this repository.
+- The code is public in this repository, so anyone can check what it does.
 
 ### Accessibility
 
@@ -29,6 +29,10 @@ The page works with keyboard and screen readers, adapts to phone, tablet and des
 ## Support
 
 The tool is and will stay free. If it helped you, you can support it through the **Pix** button at the top of the page (Pix is Brazil's instant payment system).
+
+## License
+
+Copyright (c) 2026 Guilherme Maciel. **All rights reserved.** You can use the website for free and read the code, but copying, modifying or republishing it requires written permission. See [LICENSE](LICENSE).
 
 ## Disclaimer
 
