@@ -1,14 +1,14 @@
 {
-  "name": "Hack do Bunker – SCUM",
-  "short_name": "Hack do Bunker",
-  "description": "Resolve o painel de hack da porta do bunker no SCUM a partir de um print ou foto.",
+  "name": "Bunker Hack – SCUM",
+  "short_name": "Bunker Hack",
+  "description": "Solves the SCUM bunker door hacking panel from a screenshot or photo.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "any",
   "background_color": "#15130f",
   "theme_color": "#15130f",
-  "lang": "pt-BR",
+  "lang": "en",
   "categories": ["games", "utilities"],
   "icons": [
     { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
