@@ -6,6 +6,23 @@
 <title>Hack do Bunker – resolve o painel de hack do SCUM pelo print</title>
 <meta name="description" content="Tire um print do painel de hack da porta do bunker no SCUM, aperte Ctrl+V e veja quais interruptores ligar. Grátis, roda no navegador.">
 <meta name="theme-color" content="#15130f">
+<link rel="canonical" href="https://forestus.github.io/scum-tools/">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="favicon-32.png" sizes="32x32" type="image/png">
+<link rel="icon" href="icon-192.png" sizes="192x192" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Hack do Bunker">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="SCUM Tools">
+<meta property="og:title" content="Hack do Bunker – resolve o painel de hack do SCUM pelo print">
+<meta property="og:description" content="Cole o print ou tire uma foto do painel de hack do bunker no SCUM e veja quais interruptores ligar. Grátis, em 10 idiomas, sem instalar.">
+<meta property="og:url" content="https://forestus.github.io/scum-tools/">
+<meta property="og:image" content="https://forestus.github.io/scum-tools/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Painel de hack do bunker do SCUM com os interruptores 1, 2, 3, 4, 5 e 8 marcados para ligar">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Share+Tech+Mono&display=swap">
@@ -52,6 +69,8 @@
   }
   header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
   h1 { margin: 0; font-size: 1.35rem; letter-spacing: .04em; text-transform: uppercase; color: var(--tan); }
+  .brand { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .fresh { font-size: .78rem; color: var(--muted); border: 1px solid var(--edge-soft); border-radius: 999px; padding: 2px 10px; white-space: nowrap; }
   .tools { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
   button { font-family: inherit; cursor: pointer; }
   .ghost {
@@ -164,7 +183,19 @@
   .cell.unsure { border-color: var(--warn); box-shadow: inset 0 0 0 2px var(--warn); }
   .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   /* o input de arquivo fica escondido, mas o foco do teclado aparece no rotulo "Do celular" */
-  #file-in:focus-visible + label { outline: 2px solid var(--warn); outline-offset: 2px; color: var(--fg); }
+  #file-in:focus-visible + label, #cam-in:focus-visible + label { outline: 2px solid var(--warn); outline-offset: 2px; color: var(--fg); }
+  .cam, .lbl-mob { display: none; }
+  @media (pointer: coarse) { .cam { display: inline-flex; align-items: center; } .lbl-mob { display: inline; } .lbl-pc { display: none; } }
+  #cam-app[hidden] { display: none; }
+  #cam-in:focus-visible + #btn-cam { outline: 2px solid var(--warn); }
+  .cam-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; background: #000; }
+  .cam-guide { position: absolute; left: 7%; right: 7%; top: 8%; bottom: 8%; border: 2px dashed rgba(240,192,74,.9); border-radius: 8px; pointer-events: none; box-shadow: 0 0 0 999px rgba(0,0,0,.25); }
+  .cam-video[hidden], .cam-guide[hidden], #cam-bar[hidden] { display: none; }
+  .shoot { flex: 1; min-height: 52px; font-size: 1.05rem; }
+  .view.camming .tag { display: none; }
+  .view.adjusting canvas { touch-action: none; cursor: grab; }
+  .adjust-bar { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  .adjust-bar[hidden], #btn-adjust[hidden] { display: none; }
 
   /* pular direto para a ferramenta (teclado / leitor de tela) */
   .skip {
@@ -303,7 +334,10 @@
 
 <div class="wrap">
   <header>
-    <h1 data-i18n="app.name">Hack do Bunker</h1>
+    <div class="brand">
+      <h1 data-i18n="app.name">Hack do Bunker</h1>
+      <span class="fresh" id="fresh" data-date="2026-11-14"></span>
+    </div>
     <div class="tools">
       <label class="visually-hidden" for="lang-sel" data-i18n="lang.label">Idioma</label>
       <select class="lang-sel" id="lang-sel"></select>
@@ -317,14 +351,28 @@
         <h2 id="shot-title" data-i18n-html="shot.title">Tire o print e aperte <kbd>Ctrl</kbd>+<kbd>V</kbd></h2>
         <div class="shot-actions">
           <button class="btn" id="btn-claude" type="button" hidden>Ler com Claude</button>
+          <input type="file" id="cam-in" accept="image/*" capture="environment" class="visually-hidden" tabindex="-1" aria-hidden="true">
+          <button class="btn primary cam" id="btn-cam" type="button" data-i18n="btn.camera">Foto do painel</button>
           <input type="file" id="file-in" accept="image/*" class="visually-hidden">
-          <label class="ghost" for="file-in" data-i18n="btn.file">Do celular</label>
+          <label class="ghost" for="file-in"><span class="lbl-pc" data-i18n="btn.file">Do celular</span><span class="lbl-mob" data-i18n="btn.gallery">Escolher da galeria</span></label>
+          <label class="btn primary" id="cam-app" for="cam-in" hidden data-i18n="btn.camApp">Abrir câmera do celular</label>
+          <button class="ghost" id="btn-adjust" type="button" hidden data-i18n="btn.adjust">Ajustar posição</button>
         </div>
       </div>
       <div class="view" id="view">
         <canvas id="view-canvas" width="828" height="630" role="img" aria-label="Painel de exemplo"></canvas>
+        <video id="cam-video" class="cam-video" playsinline muted hidden></video>
+        <div class="cam-guide" id="cam-guide" hidden></div>
         <span class="tag" id="view-tag">Exemplo</span>
         <button class="wake" id="wake" type="button" hidden data-i18n="wake">Clique aqui uma vez para o Ctrl+V funcionar</button>
+      </div>
+      <div class="adjust-bar" id="cam-bar" hidden>
+        <button class="btn primary shoot" id="btn-shoot" type="button" data-i18n="btn.shoot">Tirar foto</button>
+        <button class="ghost" id="btn-cam-cancel" type="button" data-i18n="btn.cancel">Cancelar</button>
+      </div>
+      <div class="adjust-bar" id="adjust-bar" hidden>
+        <button class="btn primary" id="btn-reread" type="button" data-i18n="btn.reread">Ler de novo</button>
+        <button class="ghost" id="btn-adjust-cancel" type="button" data-i18n="btn.cancel">Cancelar</button>
       </div>
       <p class="shot-status" id="shot-status" role="status">Print Screen no jogo, volte aqui e aperte Ctrl+V. Só isso.</p>
     </section>
@@ -413,6 +461,10 @@ window.I18N = {
     'note.example': '<b>Exemplo carregado:</b> um painel 60 → 70 / 28. Toque em Limpar para usar no seu painel.',
     'note.print': '<b>Lido do print.</b> As casas e os visores abaixo vieram da imagem; toque numa casa para corrigir.',
     'note.claude': '<b>Lido pelo Claude.</b> Confira as casas com o print antes de puxar a alavanca.',
+    'btn.camera': "Foto do painel", 'btn.adjust': "Ajustar posição", 'btn.reread': "Ler de novo", 'btn.cancel': "Cancelar", 'st.locating': "Procurando o painel na imagem…", 'st.notFound': "Não achei o painel nesta imagem. Arraste os cantos até os quadradinhos ficarem sobre os números e toque em Ler de novo, ou tire outra foto mais de frente.", 'st.tooSmall': "O painel ficou pequeno demais na imagem. Chegue mais perto para os números ficarem nítidos e tire outra foto.", 'st.adjust': "Arraste os 4 cantos até os quadradinhos verdes ficarem em cima dos números. Depois toque em Ler de novo.", 'note.photo': "<b>Lido da foto.</b> Foto lê menos certo que print: confira as casas em amarelo antes de puxar a alavanca.", 'cva.adjust': "Imagem enviada com o quadro de ajuste do painel", 'tag.adjust': "Ajuste",
+    'btn.shoot': "Tirar foto", 'st.camera': "Aponte para o painel inteiro, de frente, e toque em Tirar foto.", 'st.camDenied': "Sem acesso à câmera ao vivo. Toque em \"Abrir câmera do celular\" para tirar a foto.", 'cva.camera': "Câmera ao vivo apontada para o painel",
+    'btn.gallery': "Escolher da galeria", 'btn.camApp': "Abrir câmera do celular",
+    'fresh': "Atualizado em {d}",
     'side.title': 'Números do painel', 'sign.a': 'Trocar sinal de Output A', 'sign.b': 'Trocar sinal de Output B',
     'head.red': 'Vermelho', 'head.blue': 'Azul', 'head.switch': 'Chave',
     'cell.prefix': 'Linha {r}, {col}: ', 'col.red': 'vermelha', 'col.blue': 'azul', 'cell.empty': 'vazio', 'cell.unsure': ' (leitura incerta, confira)',
@@ -463,6 +515,10 @@ window.I18N = {
     'note.example': '<b>Example loaded:</b> a 60 → 70 / 28 panel. Tap Clear to use it on your panel.',
     'note.print': '<b>Read from the screenshot.</b> The cells and displays below came from the image; tap a cell to fix it.',
     'note.claude': '<b>Read by Claude.</b> Check the cells against the screenshot before pulling the lever.',
+    'btn.camera': "Photo of panel", 'btn.adjust': "Adjust position", 'btn.reread': "Read again", 'btn.cancel': "Cancel", 'st.locating': "Looking for the panel in the image…", 'st.notFound': "I couldn't find the panel in this image. Drag the corners until the little boxes sit on the numbers and tap Read again, or take another photo more head-on.", 'st.tooSmall': "The panel is too small in the image. Get closer so the numbers are sharp and take another photo.", 'st.adjust': "Drag the 4 corners until the green boxes sit on top of the numbers. Then tap Read again.", 'note.photo': "<b>Read from the photo.</b> Photos read less reliably than screenshots: check the yellow cells before pulling the lever.", 'cva.adjust': "Uploaded image with the panel adjustment frame", 'tag.adjust': "Adjust",
+    'btn.shoot': "Take photo", 'st.camera': "Point at the whole panel, head-on, and tap Take photo.", 'st.camDenied': "No access to the live camera. Tap \"Open phone camera\" to take the photo.", 'cva.camera': "Live camera pointed at the panel",
+    'btn.gallery': "Choose from gallery", 'btn.camApp': "Open phone camera",
+    'fresh': "Updated {d}",
     'side.title': 'Panel numbers', 'sign.a': 'Toggle the sign of Output A', 'sign.b': 'Toggle the sign of Output B',
     'head.red': 'Red', 'head.blue': 'Blue', 'head.switch': 'Switch',
     'cell.prefix': 'Row {r}, {col}: ', 'col.red': 'red', 'col.blue': 'blue', 'cell.empty': 'empty', 'cell.unsure': ' (uncertain reading, check it)',
@@ -513,6 +569,10 @@ window.I18N = {
     'note.example': '<b>Beispiel geladen:</b> ein Panel 60 → 70 / 28. Tipp auf Leeren, um es für dein Panel zu nutzen.',
     'note.print': '<b>Aus dem Screenshot gelesen.</b> Die Felder und Anzeigen unten stammen aus dem Bild; tipp auf ein Feld, um es zu korrigieren.',
     'note.claude': '<b>Von Claude gelesen.</b> Vergleich die Felder mit dem Screenshot, bevor du den Hebel ziehst.',
+    'btn.camera': "Foto vom Panel", 'btn.adjust': "Position anpassen", 'btn.reread': "Neu lesen", 'btn.cancel': "Abbrechen", 'st.locating': "Suche das Panel im Bild…", 'st.notFound': "Ich habe das Panel in diesem Bild nicht gefunden. Ziehe die Ecken, bis die Kästchen auf den Zahlen liegen, und tippe auf „Neu lesen“, oder mach ein neues Foto, gerader von vorn.", 'st.tooSmall': "Das Panel ist im Bild zu klein. Geh näher heran, damit die Zahlen scharf sind, und mach ein neues Foto.", 'st.adjust': "Ziehe die 4 Ecken, bis die grünen Kästchen auf den Zahlen liegen. Dann tippe auf „Neu lesen“.", 'note.photo': "<b>Aus dem Foto gelesen.</b> Fotos werden weniger sicher gelesen als Screenshots: Prüfe die gelben Felder, bevor du den Hebel ziehst.", 'cva.adjust': "Hochgeladenes Bild mit dem Anpassungsrahmen des Panels", 'tag.adjust': "Anpassen",
+    'btn.shoot': "Foto machen", 'st.camera': "Richte die Kamera gerade auf das ganze Panel und tippe auf „Foto machen“.", 'st.camDenied': "Kein Zugriff auf die Live-Kamera. Tippe auf „Handykamera öffnen“, um das Foto zu machen.", 'cva.camera': "Live-Kamera auf das Panel gerichtet",
+    'btn.gallery': "Aus der Galerie", 'btn.camApp': "Handykamera öffnen",
+    'fresh': "Aktualisiert am {d}",
     'side.title': 'Zahlen des Panels', 'sign.a': 'Vorzeichen von Output A umkehren', 'sign.b': 'Vorzeichen von Output B umkehren',
     'head.red': 'Rot', 'head.blue': 'Blau', 'head.switch': 'Schalter',
     'cell.prefix': 'Zeile {r}, {col}: ', 'col.red': 'rot', 'col.blue': 'blau', 'cell.empty': 'leer', 'cell.unsure': ' (unsicher gelesen, bitte prüfen)',
@@ -563,6 +623,10 @@ window.I18N = {
     'note.example': '<b>Загружен пример:</b> панель 60 → 70 / 28. Нажмите «Очистить», чтобы ввести свою панель.',
     'note.print': '<b>Прочитано со скриншота.</b> Ячейки и дисплеи ниже взяты из изображения; нажмите на ячейку, чтобы исправить.',
     'note.claude': '<b>Прочитано Claude.</b> Сверьте ячейки со скриншотом, прежде чем тянуть рычаг.',
+    'btn.camera': "Фото панели", 'btn.adjust': "Подогнать", 'btn.reread': "Прочитать снова", 'btn.cancel': "Отмена", 'st.locating': "Ищу панель на изображении…", 'st.notFound': "Не нашёл панель на этом изображении. Перетащите углы, чтобы квадратики легли на цифры, и нажмите «Прочитать снова», или сделайте новое фото прямо спереди.", 'st.tooSmall': "Панель на изображении слишком маленькая. Подойдите ближе, чтобы цифры были чёткими, и сделайте новое фото.", 'st.adjust': "Перетащите 4 угла, чтобы зелёные квадратики легли на цифры. Затем нажмите «Прочитать снова».", 'note.photo': "<b>Прочитано с фото.</b> Фото читается менее надёжно, чем скриншот: проверьте жёлтые ячейки, прежде чем тянуть рычаг.", 'cva.adjust': "Загруженное изображение с рамкой подгонки панели", 'tag.adjust': "Подгонка",
+    'btn.shoot': "Сфотографировать", 'st.camera': "Наведите камеру прямо на всю панель и нажмите «Сфотографировать».", 'st.camDenied': "Нет доступа к камере в реальном времени. Нажмите «Открыть камеру телефона», чтобы сделать фото.", 'cva.camera': "Камера в реальном времени, направленная на панель",
+    'btn.gallery': "Выбрать из галереи", 'btn.camApp': "Открыть камеру телефона",
+    'fresh': "Обновлено {d}",
     'side.title': 'Числа панели', 'sign.a': 'Сменить знак Output A', 'sign.b': 'Сменить знак Output B',
     'head.red': 'Красный', 'head.blue': 'Синий', 'head.switch': 'Ключ',
     'cell.prefix': 'Строка {r}, {col}: ', 'col.red': 'красный', 'col.blue': 'синий', 'cell.empty': 'пусто', 'cell.unsure': ' (неуверенное чтение, проверьте)',
@@ -613,6 +677,10 @@ window.I18N = {
     'note.example': '<b>Wczytano przykład:</b> panel 60 → 70 / 28. Dotknij Wyczyść, aby użyć go dla swojego panelu.',
     'note.print': '<b>Odczytane ze zrzutu.</b> Pola i wyświetlacze poniżej pochodzą z obrazu; dotknij pola, aby poprawić.',
     'note.claude': '<b>Odczytane przez Claude.</b> Porównaj pola ze zrzutem, zanim pociągniesz dźwignię.',
+    'btn.camera': "Zdjęcie panelu", 'btn.adjust': "Dopasuj położenie", 'btn.reread': "Odczytaj ponownie", 'btn.cancel': "Anuluj", 'st.locating': "Szukam panelu na obrazie…", 'st.notFound': "Nie znalazłem panelu na tym obrazie. Przeciągnij rogi, aż kwadraciki znajdą się na liczbach, i dotknij „Odczytaj ponownie” albo zrób nowe zdjęcie bardziej na wprost.", 'st.tooSmall': "Panel jest na obrazie za mały. Podejdź bliżej, żeby liczby były ostre, i zrób nowe zdjęcie.", 'st.adjust': "Przeciągnij 4 rogi, aż zielone kwadraciki znajdą się na liczbach. Potem dotknij „Odczytaj ponownie”.", 'note.photo': "<b>Odczytano ze zdjęcia.</b> Zdjęcia odczytują się mniej pewnie niż zrzuty ekranu: sprawdź żółte pola, zanim pociągniesz dźwignię.", 'cva.adjust': "Przesłany obraz z ramką dopasowania panelu", 'tag.adjust': "Dopasowanie",
+    'btn.shoot': "Zrób zdjęcie", 'st.camera': "Skieruj aparat na wprost na cały panel i dotknij „Zrób zdjęcie”.", 'st.camDenied': "Brak dostępu do kamery na żywo. Dotknij „Otwórz aparat telefonu”, żeby zrobić zdjęcie.", 'cva.camera': "Kamera na żywo skierowana na panel",
+    'btn.gallery': "Wybierz z galerii", 'btn.camApp': "Otwórz aparat telefonu",
+    'fresh': "Zaktualizowano {d}",
     'side.title': 'Liczby panelu', 'sign.a': 'Zmień znak Output A', 'sign.b': 'Zmień znak Output B',
     'head.red': 'Czerwony', 'head.blue': 'Niebieski', 'head.switch': 'Przełącznik',
     'cell.prefix': 'Wiersz {r}, {col}: ', 'col.red': 'czerwony', 'col.blue': 'niebieski', 'cell.empty': 'puste', 'cell.unsure': ' (niepewny odczyt, sprawdź)',
@@ -663,6 +731,10 @@ window.I18N = {
     'note.example': '<b>Exemple chargé :</b> un panneau 60 → 70 / 28. Touchez Effacer pour l\'utiliser sur votre panneau.',
     'note.print': '<b>Lu depuis la capture.</b> Les cases et afficheurs ci-dessous viennent de l\'image ; touchez une case pour corriger.',
     'note.claude': '<b>Lu par Claude.</b> Comparez les cases avec la capture avant de tirer le levier.',
+    'btn.camera': "Photo du panneau", 'btn.adjust': "Ajuster la position", 'btn.reread': "Relire", 'btn.cancel': "Annuler", 'st.locating': "Recherche du panneau dans l’image…", 'st.notFound': "Je n’ai pas trouvé le panneau dans cette image. Faites glisser les coins jusqu’à ce que les petits cadres soient sur les chiffres et touchez Relire, ou reprenez une photo plus de face.", 'st.tooSmall': "Le panneau est trop petit dans l’image. Rapprochez-vous pour que les chiffres soient nets et reprenez une photo.", 'st.adjust': "Faites glisser les 4 coins jusqu’à ce que les cadres verts soient sur les chiffres. Puis touchez Relire.", 'note.photo': "<b>Lu depuis la photo.</b> Une photo se lit moins sûrement qu’une capture : vérifiez les cases jaunes avant de tirer le levier.", 'cva.adjust': "Image envoyée avec le cadre d’ajustement du panneau", 'tag.adjust': "Ajustement",
+    'btn.shoot': "Prendre la photo", 'st.camera': "Visez tout le panneau, bien de face, puis touchez Prendre la photo.", 'st.camDenied': "Pas d’accès à la caméra en direct. Touchez « Ouvrir l’appareil photo » pour prendre la photo.", 'cva.camera': "Caméra en direct pointée vers le panneau",
+    'btn.gallery': "Choisir dans la galerie", 'btn.camApp': "Ouvrir l’appareil photo",
+    'fresh': "Mis à jour le {d}",
     'side.title': 'Chiffres du panneau', 'sign.a': 'Inverser le signe de Output A', 'sign.b': 'Inverser le signe de Output B',
     'head.red': 'Rouge', 'head.blue': 'Bleu', 'head.switch': 'Interr.',
     'cell.prefix': 'Ligne {r}, {col} : ', 'col.red': 'rouge', 'col.blue': 'bleu', 'cell.empty': 'vide', 'cell.unsure': ' (lecture incertaine, à vérifier)',
@@ -713,6 +785,10 @@ window.I18N = {
     'note.example': '<b>Ejemplo cargado:</b> un panel 60 → 70 / 28. Toca Limpiar para usarlo con tu panel.',
     'note.print': '<b>Leído de la captura.</b> Las casillas y los visores de abajo vienen de la imagen; toca una casilla para corregirla.',
     'note.claude': '<b>Leído por Claude.</b> Compara las casillas con la captura antes de tirar de la palanca.',
+    'btn.camera': "Foto del panel", 'btn.adjust': "Ajustar posición", 'btn.reread': "Leer de nuevo", 'btn.cancel': "Cancelar", 'st.locating': "Buscando el panel en la imagen…", 'st.notFound': "No encontré el panel en esta imagen. Arrastra las esquinas hasta que los recuadros queden sobre los números y toca Leer de nuevo, o saca otra foto más de frente.", 'st.tooSmall': "El panel quedó demasiado pequeño en la imagen. Acércate para que los números se vean nítidos y saca otra foto.", 'st.adjust': "Arrastra las 4 esquinas hasta que los recuadros verdes queden sobre los números. Luego toca Leer de nuevo.", 'note.photo': "<b>Leído de la foto.</b> Una foto se lee con menos seguridad que una captura: revisa las casillas amarillas antes de tirar de la palanca.", 'cva.adjust': "Imagen enviada con el marco de ajuste del panel", 'tag.adjust': "Ajuste",
+    'btn.shoot': "Sacar foto", 'st.camera': "Apunta al panel entero, de frente, y toca Sacar foto.", 'st.camDenied': "Sin acceso a la cámara en vivo. Toca «Abrir cámara del móvil» para sacar la foto.", 'cva.camera': "Cámara en vivo apuntando al panel",
+    'btn.gallery': "Elegir de la galería", 'btn.camApp': "Abrir cámara del móvil",
+    'fresh': "Actualizado el {d}",
     'side.title': 'Números del panel', 'sign.a': 'Cambiar el signo de Output A', 'sign.b': 'Cambiar el signo de Output B',
     'head.red': 'Rojo', 'head.blue': 'Azul', 'head.switch': 'Interr.',
     'cell.prefix': 'Fila {r}, {col}: ', 'col.red': 'roja', 'col.blue': 'azul', 'cell.empty': 'vacía', 'cell.unsure': ' (lectura dudosa, revísala)',
@@ -763,6 +839,10 @@ window.I18N = {
     'note.example': '<b>已载入示例：</b>一个 60 → 70 / 28 的面板。点“清空”后填写你的面板。',
     'note.print': '<b>已从截图读取。</b>下面的格子和显示屏来自图片，点格子可以修改。',
     'note.claude': '<b>已由 Claude 读取。</b>拉杆前请对照截图检查格子。',
+    'btn.camera': "拍摄面板", 'btn.adjust': "调整位置", 'btn.reread': "重新读取", 'btn.cancel': "取消", 'st.locating': "正在图片中寻找面板…", 'st.notFound': "没有在这张图片中找到面板。拖动四个角，让小方框对准数字后点「重新读取」，或者从正面再拍一张。", 'st.tooSmall': "面板在图片中太小了。靠近一些，让数字清晰后再拍一张。", 'st.adjust': "拖动四个角，让绿色小方框对准数字，然后点「重新读取」。", 'note.photo': "<b>从照片读取。</b>照片不如截图读得准：拉杆前请检查黄色格子。", 'cva.adjust': "上传的图片和面板调整框", 'tag.adjust': "调整",
+    'btn.shoot': "拍照", 'st.camera': "正对整个面板，然后点「拍照」。", 'st.camDenied': "无法使用实时相机。点「打开手机相机」拍照。", 'cva.camera': "对准面板的实时相机",
+    'btn.gallery': "从相册选择", 'btn.camApp': "打开手机相机",
+    'fresh': "更新于 {d}",
     'side.title': '面板数字', 'sign.a': '切换 Output A 的正负号', 'sign.b': '切换 Output B 的正负号',
     'head.red': '红', 'head.blue': '蓝', 'head.switch': '开关',
     'cell.prefix': '第 {r} 行，{col}：', 'col.red': '红色', 'col.blue': '蓝色', 'cell.empty': '空', 'cell.unsure': '（识别不确定，请检查）',
@@ -813,6 +893,10 @@ window.I18N = {
     'note.example': '<b>已載入範例：</b>一個 60 → 70 / 28 的面板。點「清除」後填寫你的面板。',
     'note.print': '<b>已從截圖讀取。</b>下面的格子和顯示器來自圖片，點格子可以修改。',
     'note.claude': '<b>已由 Claude 讀取。</b>拉桿前請對照截圖檢查格子。',
+    'btn.camera': "拍攝面板", 'btn.adjust': "調整位置", 'btn.reread': "重新讀取", 'btn.cancel': "取消", 'st.locating': "正在圖片中尋找面板…", 'st.notFound': "沒有在這張圖片中找到面板。拖動四個角，讓小方框對準數字後點「重新讀取」，或從正面再拍一張。", 'st.tooSmall': "面板在圖片中太小了。靠近一點，讓數字清晰後再拍一張。", 'st.adjust': "拖動四個角，讓綠色小方框對準數字，然後點「重新讀取」。", 'note.photo': "<b>從照片讀取。</b>照片不如截圖讀得準：拉桿前請檢查黃色格子。", 'cva.adjust': "上傳的圖片與面板調整框", 'tag.adjust': "調整",
+    'btn.shoot': "拍照", 'st.camera': "正對整個面板，然後點「拍照」。", 'st.camDenied': "無法使用即時相機。點「開啟手機相機」拍照。", 'cva.camera': "對準面板的即時相機",
+    'btn.gallery': "從相簿選擇", 'btn.camApp': "開啟手機相機",
+    'fresh': "更新於 {d}",
     'side.title': '面板數字', 'sign.a': '切換 Output A 的正負號', 'sign.b': '切換 Output B 的正負號',
     'head.red': '紅', 'head.blue': '藍', 'head.switch': '開關',
     'cell.prefix': '第 {r} 列，{col}：', 'col.red': '紅色', 'col.blue': '藍色', 'cell.empty': '空', 'cell.unsure': '（辨識不確定，請檢查）',
@@ -863,6 +947,10 @@ window.I18N = {
     'note.example': '<b>โหลดตัวอย่างแล้ว:</b> แผง 60 → 70 / 28 แตะ "ล้าง" เพื่อใช้กับแผงของคุณ',
     'note.print': '<b>อ่านจากภาพหน้าจอ</b> ช่องและหน้าจอแสดงผลด้านล่างมาจากรูปภาพ แตะช่องเพื่อแก้ไข',
     'note.claude': '<b>Claude อ่านแล้ว</b> เทียบช่องกับภาพหน้าจอก่อนดึงคันโยก',
+    'btn.camera': "ถ่ายรูปแผง", 'btn.adjust': "ปรับตำแหน่ง", 'btn.reread': "อ่านอีกครั้ง", 'btn.cancel': "ยกเลิก", 'st.locating': "กำลังหาแผงในภาพ…", 'st.notFound': "ไม่พบแผงในภาพนี้ ลากมุมจนกรอบเล็กๆ อยู่บนตัวเลขแล้วแตะ \"อ่านอีกครั้ง\" หรือถ่ายรูปใหม่ให้ตรงด้านหน้ามากขึ้น", 'st.tooSmall': "แผงในภาพเล็กเกินไป ขยับเข้าไปใกล้ให้ตัวเลขชัดแล้วถ่ายรูปใหม่", 'st.adjust': "ลากมุมทั้ง 4 จนกรอบสีเขียวอยู่บนตัวเลข จากนั้นแตะ \"อ่านอีกครั้ง\"", 'note.photo': "<b>อ่านจากรูปถ่าย</b> รูปถ่ายอ่านได้แม่นน้อยกว่าภาพหน้าจอ: ตรวจช่องสีเหลืองก่อนดึงคันโยก", 'cva.adjust': "ภาพที่อัปโหลดพร้อมกรอบปรับแผง", 'tag.adjust': "ปรับ",
+    'btn.shoot': "ถ่ายรูป", 'st.camera': "หันกล้องตรงไปที่แผงทั้งแผง แล้วแตะ \"ถ่ายรูป\"", 'st.camDenied': "ใช้กล้องสดไม่ได้ แตะ \"เปิดกล้องโทรศัพท์\" เพื่อถ่ายรูป", 'cva.camera': "กล้องสดที่หันไปที่แผง",
+    'btn.gallery': "เลือกจากแกลเลอรี", 'btn.camApp': "เปิดกล้องโทรศัพท์",
+    'fresh': "อัปเดตเมื่อ {d}",
     'side.title': 'ตัวเลขบนแผง', 'sign.a': 'สลับเครื่องหมายของ Output A', 'sign.b': 'สลับเครื่องหมายของ Output B',
     'head.red': 'แดง', 'head.blue': 'น้ำเงิน', 'head.switch': 'สวิตช์',
     'cell.prefix': 'แถว {r}, {col}: ', 'col.red': 'แดง', 'col.blue': 'น้ำเงิน', 'cell.empty': 'ว่าง', 'cell.unsure': ' (อ่านไม่แน่ใจ โปรดตรวจ)',
@@ -915,6 +1003,12 @@ window.I18N = {
   };
   window.applyI18n = function () {
     document.documentElement.lang = window.LANG;
+    var fr = document.getElementById('fresh');
+    if (fr) { // data no formato do idioma (14 de nov. de 2026, Nov 14, 2026, 2026年11月14日...)
+      var dt = new Date(fr.getAttribute('data-date') + 'T12:00:00'), ds;
+      try { ds = new Intl.DateTimeFormat(window.LANG, { day: 'numeric', month: 'short', year: 'numeric' }).format(dt); } catch (e) { ds = fr.getAttribute('data-date'); }
+      fr.textContent = t('fresh', { d: ds });
+    }
     document.title = t('meta.title');
     var md = document.querySelector('meta[name="description"]'); if (md) md.setAttribute('content', t('meta.desc'));
     document.querySelectorAll('[data-i18n]').forEach(function (el) { el.textContent = t(el.getAttribute('data-i18n')); });
@@ -1295,11 +1389,11 @@ window.I18N = {
       else if (tp.c !== best.c && (!second || d < second.d)) second = { c: tp.c, d: d };
     }
     if (!best) return { c: '?', d: 9, margin: 0 };
-    return { c: best.c, d: best.d, margin: second ? second.d - best.d : 1 };
+    return { c: best.c, d: best.d, margin: second ? second.d - best.d : 1, c2: second ? second.c : null };
   }
 
   var OPS = ['+', '-', '*', '/'], DIGITS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
-  var MAX_D = 0.045, MIN_MARGIN = 0.004;
+  var MAX_D = 0.045, MIN_MARGIN = 0.004, LIM = { d: MAX_D, m: MIN_MARGIN };
 
   function readLabel(glyphs, T) {
     if (!glyphs.length) return { text: '', sure: true, chars: [] };
@@ -1307,7 +1401,7 @@ window.I18N = {
     var chars = [], sure = true;
     glyphs.forEach(function (g, i) {
       var k = classify(g.vec, T, i === 0 ? OPS : DIGITS);
-      if (k.d > MAX_D || k.margin < MIN_MARGIN) sure = false;
+      if (k.d > LIM.d || k.margin < LIM.m) sure = false;
       chars.push(k);
     });
     var text = chars.map(function (c) { return c.c; }).join('');
@@ -1321,7 +1415,7 @@ window.I18N = {
     var chars = [], sure = true;
     glyphs.forEach(function (g, i) {
       var k = classify(g.vec, T, i === 0 ? ['-'].concat(DIGITS) : DIGITS);
-      if (k.d > MAX_D || k.margin < MIN_MARGIN) sure = false;
+      if (k.d > LIM.d || k.margin < LIM.m) sure = false;
       chars.push(k);
     });
     var text = chars.map(function (c) { return c.c; }).join('');
@@ -1347,14 +1441,26 @@ window.I18N = {
     };
   }
 
-  function read(img, T, truthFor) {
-    var f = frame(img), rows = [], unsure = [], debug = [];
+  // troca um caractere duvidoso pela 2a opcao do leitor (para o painel "fechar" depois)
+  function altTexts(chars, re) {
+    var out = [];
+    chars.forEach(function (ch, i) {
+      if (!ch.c2 || ch.margin > 0.03) return;
+      var txt = chars.map(function (c, j) { return j === i ? ch.c2 : c.c; }).join('');
+      if (re.test(txt)) out.push({ t: txt, m: ch.margin });
+    });
+    return out;
+  }
+  function read(img, T, truthFor, opts) {
+    LIM = opts && opts.strict ? { d: opts.strict.d, m: opts.strict.m } : { d: MAX_D, m: MIN_MARGIN };
+    var f = frame(img), rows = [], unsure = [], debug = [], alts = { cells: {}, input: [], a: [], b: [] };
     for (var r = 0; r < 8; r++) {
       var y = ROW_Y[r], pair = [];
       [GEO.labelRed, GEO.labelBlue].forEach(function (c, ci) {
         var g = glyphsOf(img, f, [c.x0, y + GEO.labelTop, c.x1, y + GEO.labelBottom]);
         var res = readLabel(g, T);
         if (!res.sure) unsure.push('linha ' + (r + 1) + (ci ? ' azul' : ' vermelho'));
+        var al = altTexts(res.chars, /^[+\-*\/]\d+$/); if (al.length) alts.cells[r + '-' + ci] = al;
         var want = truthFor && truthFor.rows[r][ci] || '';
         res.chars.forEach(function (c, i) { debug.push({ where: 'r' + (r + 1) + (ci ? 'b' : 'a'), d: c.d, margin: c.margin, got: c.c, want: want[i] }); });
         pair.push(res.text);
@@ -1364,6 +1470,7 @@ window.I18N = {
     function num(key, name) {
       var res = readNumber(glyphsOf(img, f, GEO[key]), T);
       if (!res.sure) unsure.push(name);
+      alts[{ input: 'input', outA: 'a', outB: 'b' }[key]] = altTexts(res.chars, /^-?\d+$/).map(function (q) { return { t: parseInt(q.t, 10), m: q.m }; });
       var want = truthFor ? String({ input: truthFor.input, outA: truthFor.a, outB: truthFor.b }[key]) : '';
       res.chars.forEach(function (c, i) { debug.push({ where: key, d: c.d, margin: c.margin, got: c.c, want: want[i] }); });
       return res.value;
@@ -1373,6 +1480,7 @@ window.I18N = {
       rows: rows
     };
     out.cur = [readNumber(glyphsOf(img, f, GEO.curA), T).value, readNumber(glyphsOf(img, f, GEO.curB), T).value];
+    out.alts = alts;
     out.unsure = unsure;
     out.debug = debug;
     out.ok = out.input !== null && out.a !== null && out.b !== null;
@@ -1438,11 +1546,416 @@ window.I18N = {
     });
   }
 
+
   var api = { unpack: unpack, read: read, collect: collect, synth: synth, layout: layout, frame: frame, ROW_Y: ROW_Y, GEO: GEO };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.BunkerReader = api;
 })(this);
 
+</script>
+<script>/* Localizador do painel (SCUM): acha o painel em qualquer imagem
+   (print 16:9, recorte, janela, foto do monitor tirada com o celular)
+   e endireita para o formato de referencia 3440x1440 que o leitor usa.
+   img = {data, width, height, channels}. Sem rede, sem bibliotecas. */
+(function (root) {
+  'use strict';
+
+  var REF_H = 1440, REF_W = 3440;
+  var VIEW = { x0: 1040, y0: 210, x1: 2420, y1: 1260 };
+  var ROW_Y = [265, 368, 472, 575, 679, 782, 885, 988];
+
+  // Caixas onde sempre (ou quase) ha numeros verdes, em coordenadas de referencia.
+  // w = peso. Os 5 visores sempre tem numero; as contas podem estar vazias.
+  var BOXES = [
+    [1080, 660, 1205, 712, 3], [2240, 660, 2362, 710, 3], [2240, 733, 2362, 784, 3],
+    [1860, 1140, 1985, 1188, 2], [1985, 1138, 2100, 1188, 2]
+  ];
+  ROW_Y.forEach(function (y) {
+    BOXES.push([1866, y - 4, 1940, y + 22, 1]);
+    BOXES.push([1996, y - 4, 2068, y + 22, 1]);
+  });
+
+  // Caixas grandes (busca grossa): pico largo, nao escapa da grade
+  var MACRO = [
+    [1866, 255, 1940, 1015, 2], [1996, 255, 2068, 1015, 2],
+    [1080, 660, 1205, 712, 1], [2240, 660, 2362, 784, 1.5], [1860, 1138, 2100, 1188, 1]
+  ];
+
+  var DISP = BOXES.slice(0, 5), CUT = +((typeof process !== "undefined" && process.env && process.env.CUT) || 0.15);
+
+  function greenAt(d, i) {
+    var g = (d[i + 1] - (d[i] + d[i + 2]) / 2) + 0.35 * (d[i + 1] - 90);
+    return g > 0 ? g : 0;
+  }
+
+  // Mapa de verde reduzido (media por bloco) + imagem integral
+  function greenMap(img, maxDim) {
+    var W = img.width, H = img.height, ch = img.channels || 4, d = img.data;
+    var f = Math.max(1, Math.max(W, H) / maxDim);
+    var w = Math.max(1, Math.floor(W / f)), h = Math.max(1, Math.floor(H / f));
+    var acc = new Float32Array(w * h), cnt = new Float32Array(w * h);
+    var step = Math.max(1, Math.floor(f / 3)); // amostra: nao precisa ler todo pixel de foto grande
+    for (var y = 0; y < H; y += step) {
+      var sy = Math.min(h - 1, Math.floor(y / f)), row = y * W;
+      for (var x = 0; x < W; x += step) {
+        var k = sy * w + Math.min(w - 1, Math.floor(x / f));
+        acc[k] += greenAt(d, (row + x) * ch); cnt[k]++;
+      }
+    }
+    for (var i = 0; i < acc.length; i++) acc[i] = cnt[i] ? acc[i] / cnt[i] : 0;
+    // densidade de bordas do verde: texto fino tem muita borda, area verde lisa (setas dos interruptores) nao
+    var e = new Float32Array(w * h);
+    for (y = 1; y < h - 1; y++) for (x = 1; x < w - 1; x++) {
+      var k2 = y * w + x;
+      e[k2] = Math.abs(acc[k2 + 1] - acc[k2 - 1]) + 0.5 * Math.abs(acc[k2 + w] - acc[k2 - w]);
+    }
+    acc = e;
+    // normaliza pelo percentil alto: fotos escuras/claras ficam na mesma escala
+    var sorted = Array.prototype.slice.call(acc).sort(function (a, b) { return a - b; });
+    var hi = sorted[Math.floor(sorted.length * 0.995)] || 1;
+    var I = new Float64Array((w + 1) * (h + 1));
+    for (y = 0; y < h; y++) {
+      var rs = 0;
+      for (x = 0; x < w; x++) {
+        var v = Math.min(1.5, acc[y * w + x] / hi);
+        rs += v; I[(y + 1) * (w + 1) + x + 1] = I[y * (w + 1) + x + 1] + rs;
+      }
+    }
+    return { w: w, h: h, f: f, I: I };
+  }
+
+  function boxMean(m, x0, y0, x1, y1) {
+    x0 = Math.max(0, Math.min(m.w, Math.round(x0))); x1 = Math.max(0, Math.min(m.w, Math.round(x1)));
+    y0 = Math.max(0, Math.min(m.h, Math.round(y0))); y1 = Math.max(0, Math.min(m.h, Math.round(y1)));
+    var a = (x1 - x0) * (y1 - y0); if (a <= 0) return null;
+    var W = m.w + 1, I = m.I;
+    return { s: I[y1 * W + x1] - I[y0 * W + x1] - I[y1 * W + x0] + I[y0 * W + x0], a: a };
+  }
+
+  // Homografia: aplica e resolve (4 pares de pontos)
+  function apply(Hm, x, y) {
+    var z = Hm[6] * x + Hm[7] * y + 1;
+    return [(Hm[0] * x + Hm[1] * y + Hm[2]) / z, (Hm[3] * x + Hm[4] * y + Hm[5]) / z];
+  }
+  function solveH(src, dst) {
+    var A = [], b = [];
+    for (var i = 0; i < 4; i++) {
+      var x = src[i][0], y = src[i][1], u = dst[i][0], v = dst[i][1];
+      A.push([x, y, 1, 0, 0, 0, -u * x, -u * y]); b.push(u);
+      A.push([0, 0, 0, x, y, 1, -v * x, -v * y]); b.push(v);
+    }
+    for (var c = 0; c < 8; c++) { // eliminacao de Gauss com pivo
+      var p = c; for (var r = c + 1; r < 8; r++) if (Math.abs(A[r][c]) > Math.abs(A[p][c])) p = r;
+      var t = A[c]; A[c] = A[p]; A[p] = t; t = b[c]; b[c] = b[p]; b[p] = t;
+      if (Math.abs(A[c][c]) < 1e-12) return null;
+      for (r = 0; r < 8; r++) if (r !== c) {
+        var k = A[r][c] / A[c][c]; if (!k) continue;
+        for (var j = c; j < 8; j++) A[r][j] -= k * A[c][j];
+        b[r] -= k * b[c];
+      }
+    }
+    var h = []; for (i = 0; i < 8; i++) h.push(b[i] / A[i][i]);
+    return h;
+  }
+  var VC = [[VIEW.x0, VIEW.y0], [VIEW.x1, VIEW.y0], [VIEW.x1, VIEW.y1], [VIEW.x0, VIEW.y1]];
+  function fromCorners(c) { return solveH(VC, c); }
+
+  // Pontuacao: verde dentro das caixas menos verde em volta (texto aceso em visor escuro)
+  function score(m, Hm, boxes, cut) {
+    boxes = boxes || BOXES;
+    var tot = 0, wsum = 0;
+    for (var i = 0; i < boxes.length; i++) {
+      if (i === 5 && cut !== undefined && tot / wsum < cut) return -1; // visores fracos: nem olha o resto
+      var B = boxes[i];
+      var p0 = apply(Hm, B[0], B[1]), p1 = apply(Hm, B[2], B[3]);
+      var x0 = Math.min(p0[0], p1[0]), x1 = Math.max(p0[0], p1[0]), y0 = Math.min(p0[1], p1[1]), y1 = Math.max(p0[1], p1[1]);
+      var bw = x1 - x0, bh = y1 - y0;
+      if (bw < 1.5 || bh < 1) return -1;
+      var inn = boxMean(m, x0, y0, x1, y1);
+      var vy = (B[3] - B[1]) > 100 ? 0.04 : B[4] > 1 ? 0.2 : 0.6; // visores A e B colados: anel vertical curto
+      var out = boxMean(m, x0 - bw * 0.35, y0 - bh * vy, x1 + bw * 0.35, y1 + bh * vy);
+      if (!inn || !out || out.a <= inn.a) return -1;
+      var mi = inn.s / inn.a, mo = (out.s - inn.s) / (out.a - inn.a);
+      tot += B[4] * (mi - 1.2 * mo); wsum += B[4];
+    }
+    return tot / wsum;
+  }
+
+  function simH(k, th, tx, ty) { // referencia -> mapa: escala k, giro th, deslocamento
+    var c = Math.cos(th) * k, s = Math.sin(th) * k;
+    return [c, -s, tx, s, c, ty, 0, 0];
+  }
+  function cornersOf(Hm) { return VC.map(function (p) { return apply(Hm, p[0], p[1]); }); }
+
+  // Busca grossa: escala x giro x posicao (centro do painel)
+  function coarse(m, angles, near) {
+    var best = [], bestDisp = 0, cx = (VIEW.x0 + VIEW.x1) / 2, cy = (VIEW.y0 + VIEW.y1) / 2;
+    var kMax = Math.min(m.w / (VIEW.x1 - VIEW.x0), m.h / (VIEW.y1 - VIEW.y0)) * 1.08;
+    var kMin = kMax * 0.22;
+    if (near) { kMax = near.k * 1.3; kMin = near.k / 1.3; }
+    for (var k = kMax; k >= kMin; k /= 1.035) {
+      var step = Math.max(1, k * 22); // ~22 px de referencia
+      for (var ai = 0; ai < angles.length; ai++) {
+        var th = angles[ai], c = Math.cos(th), s = Math.sin(th);
+        var hw = ((VIEW.x1 - VIEW.x0) / 2) * k, hh = ((VIEW.y1 - VIEW.y0) / 2) * k;
+        var py0 = hh * 0.85, py1 = m.h - hh * 0.85, px0 = hw * 0.85, px1 = m.w - hw * 0.85;
+        if (near) { // perto do quadro que a pessoa arrastou
+          px0 = Math.max(0, near.cx - hw * 0.6); px1 = Math.min(m.w, near.cx + hw * 0.6);
+          py0 = Math.max(0, near.cy - hh * 0.6); py1 = Math.min(m.h, near.cy + hh * 0.6);
+        }
+        for (var py = py0; py <= py1; py += step) {
+          for (var px = px0; px <= px1; px += step) {
+            var tx = px - (c * cx - s * cy) * k, ty = py - (s * cx + c * cy) * k;
+            var Hm = simH(k, th, tx, ty), sc = score(m, Hm, BOXES, bestDisp * CUT);
+            if (sc > 0) { var dsp = score(m, Hm, DISP); if (dsp > bestDisp) bestDisp = dsp; }
+            if (sc > 0 && (best.length < 12 || sc > best[best.length - 1].sc)) {
+              best.push({ sc: sc, k: k, th: th, tx: tx, ty: ty });
+              best.sort(function (a, b) { return b.sc - a.sc; });
+              // evita candidatos quase iguais
+              best = best.filter(function (q, i) {
+                for (var j = 0; j < i; j++) if (Math.abs(best[j].k / q.k - 1) < 0.08 && Math.hypot(best[j].tx - q.tx, best[j].ty - q.ty) < step * 3) return false;
+                return true;
+              }).slice(0, 12);
+            }
+          }
+        }
+      }
+    }
+    return best;
+  }
+
+  // Refinamento: mexe os 4 cantos (perspectiva) enquanto a pontuacao melhora
+  function refine(m, corners, startStep, minStep) {
+    var c = corners.map(function (p) { return p.slice(); });
+    var Hm = fromCorners(c), cur = Hm ? score(m, Hm) : -1;
+    for (var st = startStep; st >= minStep; st /= 2) {
+      var improved = true, guard = 0;
+      while (improved && guard++ < 40) {
+        improved = false;
+        // movimentos de corpo inteiro primeiro (desloca, escala), depois cada canto
+        var moves = [];
+        [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(function (d) { moves.push(function (cc) { return cc.map(function (p) { return [p[0] + d[0] * st, p[1] + d[1] * st]; }); }); });
+        [1, -1].forEach(function (sg) { moves.push(function (cc) {
+          var mx = (cc[0][0] + cc[2][0]) / 2, my = (cc[0][1] + cc[2][1]) / 2, f = 1 + sg * st / 200;
+          return cc.map(function (p) { return [mx + (p[0] - mx) * f, my + (p[1] - my) * f]; }); }); });
+        for (var i = 0; i < 4; i++) for (var a = 0; a < 2; a++) [1, -1].forEach(function (sg) {
+          var ii = i, aa = a; moves.push(function (cc) { var n = cc.map(function (p) { return p.slice(); }); n[ii][aa] += sg * st; return n; });
+        });
+        for (var mv = 0; mv < moves.length; mv++) {
+          var nc = moves[mv](c), nh = fromCorners(nc); if (!nh) continue;
+          var ns = score(m, nh);
+          if (ns > cur + 1e-6) { cur = ns; c = nc; improved = true; }
+        }
+      }
+    }
+    return { corners: c, score: cur };
+  }
+
+
+  /* ---------- Alinhamento fino: correlacao com a imagem de exemplo ----------
+     Compara a estrutura (bordas de luminancia: molduras, interruptores, visores),
+     que e igual em todo painel; os numeros mudam mas pesam pouco. */
+  function lumaMap(img, f, x0, y0, x1, y1) { // reduz por f a area [x0,x1)x[y0,y1) -> luminancia
+    var W = img.width, ch = img.channels || 4, d = img.data;
+    var w = Math.max(2, Math.floor((x1 - x0) / f)), h = Math.max(2, Math.floor((y1 - y0) / f));
+    var out = new Float32Array(w * h), step = Math.max(1, Math.floor(f / 2));
+    for (var y = 0; y < h; y++) for (var x = 0; x < w; x++) {
+      var sx0 = Math.floor(x0 + x * f), sy0 = Math.floor(y0 + y * f), s = 0, n = 0;
+      for (var yy = sy0; yy < sy0 + f && yy < img.height; yy += step) for (var xx = sx0; xx < sx0 + f && xx < W; xx += step) {
+        if (xx < 0 || yy < 0) continue;
+        var i = (yy * W + xx) * ch; s += 0.3 * d[i] + 0.55 * d[i + 1] + 0.15 * d[i + 2]; n++;
+      }
+      out[y * w + x] = n ? s / n : 0;
+    }
+    return { a: out, w: w, h: h };
+  }
+  function blur(m, sigma) {
+    var r = Math.ceil(sigma * 2.5), k = [], ks = 0, i;
+    for (i = -r; i <= r; i++) { var v = Math.exp(-i * i / (2 * sigma * sigma)); k.push(v); ks += v; }
+    for (i = 0; i < k.length; i++) k[i] /= ks;
+    var w = m.w, h = m.h, a = m.a, t = new Float32Array(w * h), o = new Float32Array(w * h), x, y, j, s;
+    for (y = 0; y < h; y++) for (x = 0; x < w; x++) { s = 0; for (j = -r; j <= r; j++) s += k[j + r] * a[y * w + Math.min(w - 1, Math.max(0, x + j))]; t[y * w + x] = s; }
+    for (y = 0; y < h; y++) for (x = 0; x < w; x++) { s = 0; for (j = -r; j <= r; j++) s += k[j + r] * t[Math.min(h - 1, Math.max(0, y + j)) * w + x]; o[y * w + x] = s; }
+    return { a: o, w: w, h: h };
+  }
+  function edgeMap(m) { // |gradiente| da luminancia suavizada, suavizado de novo
+    var b = blur(m, 1.0), w = m.w, h = m.h, g = new Float32Array(w * h);
+    for (var y = 1; y < h - 1; y++) for (var x = 1; x < w - 1; x++) {
+      var i = y * w + x, gx = b.a[i + 1] - b.a[i - 1], gy = b.a[i + w] - b.a[i - w];
+      g[i] = Math.sqrt(gx * gx + gy * gy);
+    }
+    return blur({ a: g, w: w, h: h }, 1.2);
+  }
+  function sample(m, x, y) {
+    var x0 = Math.floor(x), y0 = Math.floor(y);
+    if (x0 < 0 || y0 < 0 || x0 >= m.w - 1 || y0 >= m.h - 1) return -1;
+    var fx = x - x0, fy = y - y0, i = y0 * m.w + x0, a = m.a;
+    return a[i] * (1 - fx) * (1 - fy) + a[i + 1] * fx * (1 - fy) + a[i + m.w] * (1 - fx) * fy + a[i + m.w + 1] * fx * fy;
+  }
+
+  var TS = 0.6; // escala do exemplo (recorte do painel a 0,6 da referencia)
+  var tpl = null;
+  /* ex = imagem do recorte do painel (o exemplo embutido), em qualquer tamanho */
+  function setTemplate(ex) {
+    var f = ex.width / ((VIEW.x1 - VIEW.x0) * TS);
+    var em = edgeMap(lumaMap(ex, f, 0, 0, ex.width, ex.height));
+    var pts = [], vals = [], step = 9; // um ponto a cada 15 px de referencia
+    for (var y = 4; y < em.h - 4; y += step) for (var x = 4; x < em.w - 4; x += step) {
+      pts.push([VIEW.x0 + x / TS, VIEW.y0 + y / TS]); vals.push(em.a[y * em.w + x]);
+    }
+    var mean = 0; vals.forEach(function (v) { mean += v; }); mean /= vals.length;
+    var sd = 0; vals.forEach(function (v) { sd += (v - mean) * (v - mean); }); sd = Math.sqrt(sd / vals.length) || 1;
+    tpl = { pts: pts, z: vals.map(function (v) { return (v - mean) / sd; }) };
+  }
+  function ncc(em, Hm, every) {
+    every = every || 1;
+    var n = tpl.pts.length, sv = 0, svv = 0, svt = 0, k = 0, tot = 0, vals = new Float32Array(n);
+    for (var i = 0; i < n; i += every) {
+      var p = apply(Hm, tpl.pts[i][0], tpl.pts[i][1]), v = sample(em, p[0], p[1]);
+      vals[i] = v; tot++; if (v < 0) continue; sv += v; svv += v * v; k++;
+    }
+    if (k < tot * 0.8) return -1; // painel saindo muito da imagem
+    var mean = sv / k, sd = Math.sqrt(Math.max(1e-9, svv / k - mean * mean));
+    for (i = 0; i < n; i += every) if (vals[i] >= 0) svt += (vals[i] - mean) / sd * tpl.z[i];
+    return svt / k;
+  }
+  // alinha os cantos (em pixels da imagem) maximizando a correlacao
+  function alignNCC(img, corners, quick) {
+    var span = Math.hypot(corners[1][0] - corners[0][0], corners[1][1] - corners[0][1]);
+    var f = Math.max(1, span / ((VIEW.x1 - VIEW.x0) * TS));
+    var xs = corners.map(function (p) { return p[0]; }), ys = corners.map(function (p) { return p[1]; });
+    var pad = span * 0.12;
+    var x0 = Math.max(0, Math.min.apply(null, xs) - pad), y0 = Math.max(0, Math.min.apply(null, ys) - pad);
+    var x1 = Math.min(img.width, Math.max.apply(null, xs) + pad), y1 = Math.min(img.height, Math.max.apply(null, ys) + pad);
+    var em = edgeMap(lumaMap(img, f, x0, y0, x1, y1));
+    var c = corners.map(function (p) { return [(p[0] - x0) / f, (p[1] - y0) / f]; });
+    var Hm = fromCorners(c), cur = Hm ? ncc(em, Hm) : -1;
+    var steps = quick ? [8, 4] : [12, 6, 3, 1.5, 0.75, 0.4];
+    steps.forEach(function (st) {
+      var improved = true, guard = 0;
+      while (improved && guard++ < 30) {
+        improved = false;
+        var tries = [];
+        [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(function (d) { tries.push(c.map(function (p) { return [p[0] + d[0] * st, p[1] + d[1] * st]; })); });
+        [1, -1].forEach(function (sg) {
+          var mx = (c[0][0] + c[2][0]) / 2, my = (c[0][1] + c[2][1]) / 2, fs = 1 + sg * st / 300;
+          tries.push(c.map(function (p) { return [mx + (p[0] - mx) * fs, my + (p[1] - my) * fs]; }));
+          var a = sg * st / 400, ca = Math.cos(a), sa = Math.sin(a);
+          tries.push(c.map(function (p) { var dx = p[0] - mx, dy = p[1] - my; return [mx + ca * dx - sa * dy, my + sa * dx + ca * dy]; }));
+        });
+        for (var i = 0; i < 4; i++) for (var ax = 0; ax < 2; ax++) [1, -1].forEach(function (sg) {
+          var n2 = c.map(function (p) { return p.slice(); }); n2[i][ax] += sg * st; tries.push(n2);
+        });
+        for (var t = 0; t < tries.length; t++) {
+          var h2 = fromCorners(tries[t]); if (!h2) continue;
+          var sc = ncc(em, h2);
+          if (sc > cur + 1e-5) { cur = sc; c = tries[t]; improved = true; }
+        }
+      }
+    });
+    return { corners: c.map(function (p) { return [p[0] * f + x0, p[1] * f + y0]; }), ncc: cur };
+  }
+
+  // print (retangulo reto, proporcao certa) ou foto (giro/perspectiva)?
+  function isPhoto(c) {
+    var w1 = Math.hypot(c[1][0] - c[0][0], c[1][1] - c[0][1]), w2 = Math.hypot(c[2][0] - c[3][0], c[2][1] - c[3][1]);
+    var h1 = Math.hypot(c[3][0] - c[0][0], c[3][1] - c[0][1]), h2 = Math.hypot(c[2][0] - c[1][0], c[2][1] - c[1][1]);
+    var ang = Math.abs(Math.atan2(c[1][1] - c[0][1], c[1][0] - c[0][0]));
+    var asp = ((w1 + w2) / (h1 + h2)) / ((VIEW.x1 - VIEW.x0) / (VIEW.y1 - VIEW.y0));
+    return ang > 0.006 || Math.abs(w1 / w2 - 1) > 0.01 || Math.abs(h1 / h2 - 1) > 0.01 || Math.abs(asp - 1) > 0.015;
+  }
+  // nota rapida de um candidato num mapa unico de baixa resolucao (so para ordenar)
+  function quickNCC(emq, fq, corners) {
+    var c = corners.map(function (p) { return [p[0] / fq, p[1] / fq]; }), Hm = fromCorners(c), cur = Hm ? ncc(emq, Hm, 3) : -1;
+    [2, 1].forEach(function (st) {
+      for (var it = 0; it < 6; it++) {
+        var moved = false;
+        [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(function (d) {
+          var n2 = c.map(function (p) { return [p[0] + d[0] * st, p[1] + d[1] * st]; }), h2 = fromCorners(n2), sc = h2 ? ncc(emq, h2, 3) : -1;
+          if (sc > cur) { cur = sc; c = n2; moved = true; }
+        });
+        if (!moved) break;
+      }
+    });
+    return { corners: c.map(function (p) { return [p[0] * fq, p[1] * fq]; }), ncc: cur };
+  }
+  function scaleCorners(c, f) { return c.map(function (p) { return [p[0] * f, p[1] * f]; }); }
+
+  /* Acha o painel. Devolve {corners (4 cantos do recorte do painel, em pixels da imagem), score} ou null */
+  function locate(img, opts) {
+    opts = opts || {};
+    var m1 = greenMap(img, 280), near = null;
+    var angles = opts.angles || [0, -0.05, 0.05, -0.1, 0.1];
+    if (opts.hint) { // quadro arrastado a mao: procura so em volta dele
+      var hc = opts.hint, hs = Math.hypot(hc[1][0] - hc[0][0], hc[1][1] - hc[0][1]) / m1.f;
+      var ha = Math.atan2(hc[1][1] - hc[0][1], hc[1][0] - hc[0][0]);
+      near = { k: hs / (VIEW.x1 - VIEW.x0), cx: (hc[0][0] + hc[1][0] + hc[2][0] + hc[3][0]) / 4 / m1.f, cy: (hc[0][1] + hc[1][1] + hc[2][1] + hc[3][1]) / 4 / m1.f };
+      angles = [ha, ha - 0.05, ha + 0.05, ha - 0.1, ha + 0.1];
+    }
+    var T0 = Date.now();
+    var cands = coarse(m1, angles, near);
+    var T1 = Date.now();
+    var m2 = greenMap(img, 720), r = m1.f / m2.f, list = [];
+    // palpite do jogo: painel centrado, escala pela altura da tela (print de qualquer proporcao)
+    var s0 = img.height / REF_H, ox = (img.width - REF_W * s0) / 2;
+    var gc = VC.map(function (p) { return [ox + p[0] * s0, p[1] * s0]; });
+    var fq = Math.max(1, Math.max(img.width, img.height) / 900), emq = tpl ? edgeMap(lumaMap(img, fq, 0, 0, img.width, img.height)) : null;
+    function rank(c) { return tpl ? quickNCC(emq, fq, c) : { corners: c, ncc: 0 }; }
+    if (!opts.hint && gc[0][0] >= 0 && gc[1][0] <= img.width) list.push(rank(gc));
+    if (opts.hint) list.push(rank(opts.hint));
+    cands.slice(0, 12).forEach(function (q) {
+      var c0 = scaleCorners(cornersOf(simH(q.k, q.th, q.tx, q.ty)), r);
+      var res = refine(m2, c0, 4, 1);
+      var c1 = scaleCorners(res.corners, m2.f);
+      list.push(tpl ? rank(c1) : { corners: c1, ncc: res.score });
+    });
+    var T2 = Date.now();
+    if (!list.length) return null;
+    list.sort(function (a, b) { return b.ncc - a.ncc; });
+    var best = list[0];
+    if (tpl) { // alinha fino os 2 melhores e fica com o maior
+      best = null;
+      list.slice(0, 2).forEach(function (q) { var a = alignNCC(img, q.corners, false); if (!best || a.ncc > best.ncc) best = a; });
+    }
+    var T3 = Date.now();
+    return { corners: best.corners, score: best.ncc, ms: [T1 - T0, T2 - T1, T3 - T2], photo: isPhoto(best.corners) };
+  }
+
+  /* Endireita: gera uma imagem 3440x1440 (RGBA) com o painel no lugar de referencia.
+     So preenche o recorte do painel; o resto fica preto. */
+  function rectify(img, corners) {
+    var Hm = fromCorners(corners); if (!Hm) return null;
+    var W = img.width, H = img.height, ch = img.channels || 4, d = img.data;
+    var out = new Uint8ClampedArray(REF_W * REF_H * 4);
+    for (var i = 3; i < out.length; i += 4) out[i] = 255;
+    // escala da foto: se o painel ficou maior que a referencia, faz media 2x2 para nao serrilhar
+    var cs = corners, span = Math.hypot(cs[1][0] - cs[0][0], cs[1][1] - cs[0][1]) / (VIEW.x1 - VIEW.x0);
+    var ss = span > 1.6 ? 2 : 1, off = ss === 2 ? [-0.25, 0.25] : [0];
+    for (var y = VIEW.y0; y < VIEW.y1; y++) {
+      for (var x = VIEW.x0; x < VIEW.x1; x++) {
+        var r = 0, g = 0, b = 0, n = 0;
+        for (var oy = 0; oy < off.length; oy++) for (var ox = 0; ox < off.length; ox++) {
+          var p = apply(Hm, x + 0.5 + off[ox], y + 0.5 + off[oy]), sx = p[0] - 0.5, sy = p[1] - 0.5;
+          var x0 = Math.floor(sx), y0 = Math.floor(sy);
+          if (x0 < 0 || y0 < 0 || x0 >= W - 1 || y0 >= H - 1) continue;
+          var fx = sx - x0, fy = sy - y0, i00 = (y0 * W + x0) * ch, i10 = i00 + ch, i01 = i00 + W * ch, i11 = i01 + ch;
+          var w00 = (1 - fx) * (1 - fy), w10 = fx * (1 - fy), w01 = (1 - fx) * fy, w11 = fx * fy;
+          r += d[i00] * w00 + d[i10] * w10 + d[i01] * w01 + d[i11] * w11;
+          g += d[i00 + 1] * w00 + d[i10 + 1] * w10 + d[i01 + 1] * w01 + d[i11 + 1] * w11;
+          b += d[i00 + 2] * w00 + d[i10 + 2] * w10 + d[i01 + 2] * w01 + d[i11 + 2] * w11;
+          n++;
+        }
+        if (!n) continue;
+        var o = (y * REF_W + x) * 4; out[o] = r / n; out[o + 1] = g / n; out[o + 2] = b / n;
+      }
+    }
+    return { data: out, width: REF_W, height: REF_H, channels: 4 };
+  }
+
+  var api = { setTemplate: setTemplate, alignNCC: alignNCC, locate: locate, rectify: rectify, fromCorners: fromCorners, apply: apply, VIEW: VIEW };
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+  else root.BunkerLocator = api;
+})(this);
 </script>
 <script>
 window.BUNKER_TEMPLATES = [["+","000000000000012577753210026aegfc7410149gmnlhb73049gmstrnhc73agmquutqnic7gnrtvuusrojcmswwvuuuvsnhmswwvuuuvsohgnrtuuutrojdaglquutrnid749gmstsoid7314agmnmic730026afgfc8420013578763210000000000000",1.125,0.571,0.464,1],["+","245799998764468accddba8679bdggghfdb99behjkkligebbehknnnomjhedhknqqrrpmjggjnqtuuvspmigjnqtuuvspmjgknqtuvvtqnjgknqtuvwtqnjehknqrstqnlhcfiknoppnlifacfikllmkigd7acehhiigfda579bddefdba834679aaba875",1,0.5,0.438,1],["+","34688987532157acddcb96428behhihfc964cfilmmljgd96fjmpqrpnkgc8inquuvurnjeajnruvvurojfbjnruvvurojfbhlpttutqnieaeimpqrqnkfb8bfjmnomkhc868beiijifd96457adeedb96323579aaa86421235667654210123333332100",1,0.625,0.5,0.667],["+","1123443321002356776543103579aaa8642157adeeeb96328behijifd964bfimnomkhd86dhlpqqpmjfb8gkosstspmhd9hmptuvtqnjeahmptuvtqnjeahlpsuutqnjeaeilpqqpnkgc8behlmnmjhd968bdghiifda7457acdedca743246899986421",1,0.625,0.375,0.833],["+","00000000000000011111100000247aa852101259ehhe9531469fkoolfa748bglquurmhc8chmruxxvsnicdjptwyyxuqkeciosvxxwtpjd9djosvvtpkf957chnrroid95247chlmid8531137cffc8421001368864200000011111000000000000000",1.286,0.5,0.429,1],["+","11234555421123579bcb9642469cfikifb747aeimqrpmhc7afkoswxvsnhbekpsvyyxvsmginsvxyzyxvqlkqvxyzzzyxtokqvxyzzzywtnhmruwyyywtpkchmquwxwtpkf7cgmquwuqke947bglprplfa5247bgkljfa521247bdeda631012356664210",1,0.571,0.464,1],["+","00000000000001123454421001357aba85311258cghgd852369ejnomid847aejostrnid8bfkpsvwvsnicfkptvxyxvrmhhnsvxyyywtojhntwyzzyxupjcinsvxywuqlf8dhmquvtqlgb47bgkoqnkea6236aehigd953012479987421000000000000",1.143,0.5,0.429,1],["+","0113456542101247addb9531247cgjkie95269dimqrokfa6afjosvvtqlgbfkptvxywuqmginsvxyyywtojiotwyyzywupjfkptwxyxuqlgbglptwwurmhb7bflpturnhc747bglpqnid84358cgjjhd8522358acdb8531123567764210111223322100",1,0.571,0.464,0.933],["+","0000000000000012332210000135776531001369cdc9621036aeijiea6315afkopokf952aflpstspkfa5djpsvwvtojd8flrtwxwuqlf9ekqtvwwupke8ciosuwvsnic78djnqrqnid8448dhlmlid842258cfgfc8421124689864210001112111000",1.167,0.545,0.409,1],["+","01235665431002469aa97521237adffeb84246aeikkjgc746afjmopnkgb7aejnqssqokfbchmqsuutqnieejosuvvuspkgejosuvvuspkgchmqsuutqnieaejnqrsqnkfb6aejmoonkfb746aeikkjfb74237adffeb84202469aa97521012356654310",0.857,0.636,0.455,1],["+","12344443210035688876421058adddc974219cfhiigeb843cgjmmmlifb75fjmqqqolie97imqtuusplhc9jnruvvtqmid9jnruvvtqmid9imqtuuspmhc9fjmqqqoliea7cfjmmmlifb759cfhiiheb85358adddca7521356889864210123444432100",1.25,0.5,0.438,1],["+","000000000000000123432100001369a852000026bghea410126bioplg94246bhnsuqlf967chmrvwtpkfbbhmrtvvusplgcjostvvutqmhaglqsvvurnje7bgmquvtojea35agmtuqkd84125agmolf8310026afhe9410001247874200000000000000",1.125,0.533,0.433,1],["+","0124566431000247abb85210137bfhgc842037chlnmid8427cjnrtsoid84bhnqsutqmhc7flrstuusolf9hntuuvutqngbgmstuuutqmgadiortutqnjd89djmpqqnie9559dilnmje952259cfggd95311247aaa85210012355542100000122221000",1,0.636,0.455,1],["+","011234443210123589a975311359dghfc852469ejmomic847aekosurnhc7bfkosvwvrmhcfkptvxyxurmgjotwxyzyxupkjpuxyzzyxvqlglquwyyxwsnibglptwxvsojd7afjorsqnid8369dhlmkgc841247bdeda631012357765310001123322100",1,0.571,0.464,1],["+","0000000000000013588742000026bghe9410014agnokd721359gntvqkd748cgmqvwupke9cioruwxvtqmggotwwxxxwvslgntvwwxwwvrlchmqtvwvsplg7bfkpuwtojea348fmtvqjc740149gnple7210026bghe9410001358874200000000000000",1.125,0.571,0.464,1],["+","4579bbbb986457aceeeeca867acfhhhhfdb8acfilllligebcfiloooomjgdehknqqqqolifeilorrrrpmjffjmpsssspmjgfilpsssspmjgehknqqqqnkiecfilooooljgdbdgilllljheb8bdfiiiigdb968aceeeeca864679bbbb9864345788887653",0.8,0.556,0.444,0.833],["+","000000000000024689863100147begea631026afjlje95216afloqoje953afkpsurnjd96fkpsvwuroje9hmruwxvtplgagmruwxwtplfaekptwxvsoje9agmquwtpke967cinrtqmga6359eimomhc74236adfhfc8521235789864210000000000000",1.143,0.5,0.429,0.9],["+","0012444321000147bdc95200037djljf841037dkqsqlf9528ekqvwuqlfa5elquwwvtrmgakswxxxwwwsnflswxxxwwwtogiptvwwwvuqleciosvwvtplf96cipuvuqkf9426cjqsqmf951038dkmkha5200248dedb6310001357652100000122211000",1,0.6,0.467,1],["+","0012233332110124688864321247befdb752247bgkljgb7447bgmqrplfa67chmquusoje9chmquwwurnidgmrvxyxwtqmhiouxyyywurnihnsvxxxvtplgdjoruwwtqmhd9einruurnid859dimqqnjd85248chlmjf9521258cfgea631012457765310",1,0.533,0.433,1],["+","0000000000000011121110001247aba74200259dhihc741059ejopnic742afkptusoid96gmquwwvsokfakquxyyxvsojdjpuwxxxvsojdfkpsuvusokfa9dimqsroiea647bfkmlic8531369eggd842101358a974200000111111000000000000000",1.286,0.5,0.429,1],["+","00000000000000123443100001369a974200036bhihd842016bipqole9415biouvtqlf94ahnswwwuqke7gnsvwwwvtpjchotvwwwvuqkcelruwwwvsnha9gmrvwvtojc749gntutpjd7215agmomjc731026afgfc7420012477753100000000000000",1.125,0.533,0.433,1],["+","0000000000000023566531001248ceda6310259ejlkgb6317cgmqsrnhc84dinsvwvsnid8hotwxyxvsnibkrvyzyywuqkdhnswxyxvrnhbcinswwvsnhc77chnsusohc7437cioqojc731137cgihd84100247aba84210012344432100000000000000",1.125,0.571,0.464,0.917],["+","0000000000000125789763201359dggeb741359ejnnkga637afjorsqlgb7bgkpsvwtqlhcglqtwxxwurmhiotvxyyxwtpkinsvxxyxvsojekosuwwusokf9einqssqniea58dhloolhc85147bfiifb7311248acca7420012456653210000000000000",1.143,0.5,0.429,1],["+","1124577654321247acdca753246afijhea7436aflpqnkea66afkpstrnid8afkptvwtqlgcekquwxxvtpkfhnswxyxwuqmhhnsvxyxvtqlgejosvwwurmidaejosuusoie959djorrpke95248dinnlga521359dhhfc74101369bba8421011245554210",0.889,0.6,0.467,0.95],["+","0124555422111358bcb96422259dhjiea75359djnpnkfb868djosutplhdaejosvxwtqnjeinsvxyxwusojlrvwyzyyxwsmlquwyzzyyxtnhmqtwxxwvtqlchlqtwvurplh6bglqtsqmjfc37bglonkgda8137cgiieb8640247acb97543012345543211",1,0.571,0.464,1],["+","0012222210000124665431001258acb85210259dgihd953159eimonje9529djnqsrnje95ciortuurnid8ekqsuvvtpke9ekqsuvvtpke9ciortutrnid89ejnqrqnje9559eimnmje952259cfhgd95311257aaa85210012355542100000122211000",1,0.636,0.455,1],["+","00000000000000124666421001359cdb95311359ehjhd95247aejnomid957bfkorsqnie9chlpsuvtrnjedinrtvvusokfdinrtvvurojebglpsuutqmhc7bfjnrrpmhc847aejmnlhc84246adhhgd85212368bba8531011245554210000000000000",1.143,0.467,0.467,0.9],["+","0000000000000123578753100247aefda631136bgkljfa5248chmqrplgb68dhmruvuqlgbdinruwxwuqlgflqtwyyywtoiflquwyzywtoidiosvxyxvrmg9ejptwywtoic6bflptvtpjd847bgkopnke95358behigea63134679997531000000000000",1.143,0.467,0.467,1],["+","0123566542101247accb8531137bfijhd84225aflpqnic7359ekpttqmgb68diosvwuqlfacinsvxxwtpkfgmrvxyyxvsojgmsvxyyywtpkflquwyyxvsnibglquwxvsoje7bglqtusoje936aglpqoke94147bfjkiea620247acdc9631012356765310",0.889,0.6,0.467,0.95],["+","001222221100013578764210036bfgfd952004ahmomke84038elstspid728ekpuvusnic7ekpsuuutqnjdlrvvvvuuuspjmswwwvvvvuqliotvwvvuurnhbioswwvuqmga5biouvurlfa416cjqrqnga51038dijigb6300247aba96310011234332100",1,0.643,0.429,1],["+","001133321000012489973100025afhgd841015agmonke94149gmrtspke949fmruvutqke7flqtuuuuspjcgnrtuuuttpkeflqtuuutsojdbhnruuutqlg95biotutrmga426ciopomgb62037chiifa6300136aba85310001134442100000011110000",1,0.6,0.467,1],["+","0012455421000137bcc95200026cikjf941015aiprqle8315biouvuqle84biosvwvtqke8hotvwvvuuqjcmtxxvvvvwtngkrvwvvuuvrmffmruvvuusoic9gmruvusojd74ahottspke8315bhmnmje951036afgfd8520012478874210000022321000",0.9,0.667,0.433,1],["+","2346665432004579aa97642168bdeedb96428behijifc964bfimnomjgc96ejnrssrokgb8fkostutqmhd9glptvwvrnjeagkosuvurnieaeimqrsrolhc8cgknopoljea79cfijkjheb8568befgfda753468abbb97532235677654311112333332100",1,0.556,0.444,0.833],["+","001111111000024578864210137adeeb742025aeikjfb7316agknqplgc74afmptvuqmic7ekqsuvvsqngbhntuvwvusqjdhntuvwvusqjdfkqsuwvtqnhbagmqtwvrnjd86afknqplhd84259dhjjfb7311369bdda7420013567754210001111111000",1.167,0.6,0.45,0.917],["+","0134677753101258accb8631248bfhhgc85247bgjmmkhc858chlprrpmid9cglpsuutqmhdgkpsuvvvtqlhimruvwwvusnjimruvwwwusnjgkpsuvvvtqlhcglprtutqmid8bgloqrpmid947bgjmmlhd85148bfhigc9521258bcdc9631013567875310",1,0.6,0.45,1],["+","000000000000013567642100136aeec9521026afklje84215aflqqojd842aglquusoje95flquwwvspkf9jpuxyyxwtpjcjpuxyzyxvqkdflqvxyyvsnhbbgmrvxwsnhc76agmsutoic7336bhmomic731137bfgfc8420013577763210000000000000",1.125,0.571,0.464,1],["+","0001222210000013578642000026afgd8410014agmnjd620248elrtoha5269ekpuvrmgb7aglpsuvtqnicelruvwwvutohfmsvwwwwvuphbiosuwxvtpkd7bhmrwwtojd8359gnuupib63015bippkc6200027chhd830000147aa74100000123321000",1,0.643,0.429,0.938],["+","0124577642101369cffda63136aejmmjfa637bgkorsplgb7chmqtwwurmhcgmruwyyxurmhjptwyzzywuqkjpuxyzzyxvrlhmrvxyyxvsnidinrvxywsojd9dinsvwtpje959djnrspke9536aeilmjfa63247adffda641235789976321112334432110",1,0.571,0.464,0.933],["+","001222211000013578753100026afgeb7410049gmnmhb62038elstrnga528ekqvwurlgb6ekptwwvtqmgajqvwwwwvuqlejrvxxxwvvrlefmruwxwusnha8flrvwvrnhb538fnuvtnga5204ahpqoia520026chjgc62000137ab963100001234321000",1,0.643,0.429,1],["+","23466665421145799a98642158acdedb86427adghiheb853behklmljgc96eilpqrqnkgc9fjnqrsromidagkorttsqnjfbglortttqnjfbgknqssrpmieaeimpqrqnlhd9bfilmmmjgd978behhihfc96458addedb964235799a976421234566543210",1,0.714,0.429,0.833],["6","0159dfggfea514ainqqqqnf74aiquwvusof7ajquwurolha4gpuwupkgc952jtwvsoieb963ksvutqnlkid8ksvvvvvuusngksvuvvuuvvtoksutrommptvtksusniffjqvvktusokggkqvviruusqooqtvtensuvuuuuusn8flqssssrqlg37chjkkkjhc7",0.786,1,0.464,0.9],["6","004fllllld1004crvsssvl202gquvrqqpd10eqvupd998300pttnc2000000qroc10000000qrphbbbcc700qqqqppqqsj41qqrsssssvsj9qrqkeeefnttgqrna0001frrhqrm90000errhqroe6667irshnsspmmnnrsqebousssstvqe62dlllllmnf30",0.741,1,0.481,0.653],["6","001368887410003afhghgb3003ajpqoold417dkppkfec821fnrpkc754201kttme6332211jssmgcccb841goromlkllib5clqomlkmpqlcajplgcbfmttiaiph9328jtvkaipjd88cluvk8hqokhgjotsh5clpqppqrpka14bfhggggea3003688887520",0.867,1,0.467,0.792],["6","0006gkkkja20018jvxxxuh3028nwvpmmja20cnwyp9443100lxxqd2000000mywj61111100lyysmihhgc30hxyzywvwvqe6ewyvsrrrtvtkcuvlbaaafszsbstf20018pytbstf31139pytaruoheginuxr6hqvvuvxyxqg13dpsqrsspc30039baaaa820",0.808,0.963,0.5,0.714],["6","1257bdffeb86248cgikjgd9858dilnnlhd997chmpqpmid9aagmrttrnid9bciotutrnjfbedkqvvurokhegekquusqomkjlekqutrpoooopelqutrppqrstdkptsrppqrttcjossrppqrss9fkpqqqqqpon7bglnpppomki47bfhjkkjgec2469bdeedb87",0.667,1,0.444,0.833],["6","005bhjijic5003blrsrtri805ckrtqnnmf60cmsvqjddc830hrtqia432100hrsqjdaa9520gprpnlllke71hqttuuuutoh8irusqooorqpeisuoidddinskjtukc444bhqjisumgaaafkrlgqwsollloquo9isvxwwwxwtk4alrwxxxxtmc029gllllmhb3",0.75,1,0.469,0.6],["6","14bnuuuuum812amxywvvul706iuztjfee920hsxwk6222100oywl92000000oyug63233200oywqlhhijd40oyzyxvvwxre5pyywtssvxxsipzujdbcfmwzrqzra2113bszrqzra21129rzrpythbaaagtyriuwtrrrrtwvm6iuyyyzzytja17inopppoh72",0.731,0.963,0.5,0.679],["6","0149fknolg94149gnsuurld649gnsuutqkd77fnsusqnlhc8bksvurnljgc9dovxvsqonkfcfpwyxwvvurmhgqwzzzzzyxsnhrxyxvuvwxwrhrxxurpqtwxuhqwwtpmnswyufovwurpqtwwsbjrvwvuvwwtn6dkqtvvvusng26chmoppnkf90259ceffeb73",0.786,0.933,0.5,0.9],["6","0005jppppg30005gtwvuvo7014gtwsoooi409luxuhaa9500lwxuk6000000ovvn95444200ovvsmmmmmd10outvvvvvvo71outvwwwvwulcovvqihhiqxuoovvi2111hwuqovvh1000gwuqowwm8778kxvqitvtpppptxtj5bnwxxwwxsf501blmmmmmf30",0.778,1,0.481,0.775],["6","247aehjkjiec47bfjlnonkge7bgknpqqolgeafkorssrolgfdiosuutrolgfflruvvtrolhghnsvwvtromjiiotwvusrpnlliotvutsrqqppiotvutrrrrssintvutrrrsuvhmrutsrrstuvfkqstsrrssttdinqrsrrsrrqaejmpqrrrqom7aeilnooomjh",0.75,1,0.438,0.778],["6","003ceeeec300009twvvwt80006jtrooqq800eotuqgffd300pvvsf4222000nrrh52221000nrrmiiiig600orsuuuuuuj51prrqoooortj8qsukcccdksrgrsvd1112bqqiqsuf4444drqjmtvrnnnnrusndswvttttuvui3apvttttuqe4018gggghhb20",0.815,1,0.481,0.625],["6","36aehjigd9637chlnonjfa64cioqqpmiea76hotspmhda655lsvsoid96446ntwsnjeca878otwtqnkiheddotwutrponmjiotwusrqrsrpootwtqonorttsotvrnkjlpuuuntvrnkjlptuumsvtqonprtsqjpuutrrssrolekoqqqqqpmif9dhjkkkkifb8",0.8,1,0.45,0.8],["6","014bhlmmlg9204ajqtssqja25ckqrokihd72bkqsohca9631hrtph9422110jttohb887420jtsplihhfb61jtttsrqqpkd6jtttsrrrsqlcjtsokihjnqrhjtqkd88biptjjtog7226fntjjtqjc88biptjhrrokhhjorsibkpssrqrsrnd5bgkmmmmlid6",0.733,1,0.467,0.792],["6","0259dhjifb6225afknonke845agloponkf96bhmppnkigc98gnrsokgfdb99krutplihgdbbntwvsqoomjfdnuxxwvvvtqlhovyyxxxxxvrnovyxussuwwurovxvsporuxwtovxvsporuxxumtxwussuwxwtiquwwwwxxxuqdjptvwxwvtok7chmpqrqpmhd",0.714,1,0.464,0.92],["6","000599999500002gqppprh2004gptsrrti209fqtqhbbb600prtpg4000000rstf40000000qrrhbbbbc810nqqqrqqrtl61hqprqqqqttofeqqldccdmvundqof3112htsoerog3112htsodrqnhgghoutn8mttsssstuqg17joooooonc3004abbbbb710",0.815,1,0.481,0.625],["6","37chlooomgb87djprssqnidacjquvurplgcagouvuqmifa89jqxwtqliea89ksxwurnkhdbbkrxwutrpnkhgkrxvtsrrsqnlkrwtrpoqstrqkrwrnkilpuutkrwsnkilpuvujqvtpmlnrutshoutsqprstqocjprstsssplh8dilnoonmjeb47befggfeb75",0.727,1,0.455,0.8],["6","15afknnmie9549houwwvqjc78fntwwusnhb8clsvurnkgb77gpuvsniea745jswwsnifb745ktxxuromhc87ltxyxxwvqkebmuyzyxxwuqlhnvyywvtuutqmovyxurpqsutqnvywtqnosuurkswwurpqstrofotwwutssqmi9gnsuutrpkfb49fjnnmkhc74",0.714,1,0.464,1],["6","0017fhgfc400015juwvuqb0028jtvrrqna00boxxmca97200lxxpc2000000nysg73221000nxuokihge710nxyyyxxwuk62mxywuuuuuslekxwldcccgrxpiwwf21115mxqfuwf21115mxofuxoecdehsyqcryxuuuvwywn5dpwxyyyxwla12aiklllkg61",0.778,1,0.481,0.625],["6","002dpqqqnc20017myzyxuh3049kuupnmi910gqvulb864100rzwlb5310000tzug77532100szwojjihe610szyxwwwwth41qyyxxxxwwrh7pzujffggmutgpzq80111dsvjqzr91111dtwjrzuha999ivwjpxxtqqppsvsfeowzzyyywpf749joponmkc41",0.741,1,0.481,0.639],["6","000489987200004hsttsn80004jvxwvtn8007hvzrfba8200kwyuh4000000pzwi61000000nzwmfdba9500kzzyywuuti62gxywvvuvxvocdvwkcccfpyxjdvvd1113fwyndwwf3222cuzpduxpjhhhnxym6itzzyyxywnb03htuuuuum810049bbbbb710",0.815,1,0.481,0.639],["6","00147beec841015agloolf8325biosutpia45cjqtutrnha5bjrvuspmje86fpvxuqmkhd77isxxvsqomic9jtyyxwvutoidjtyzyyxxxuojjsxxvtrsuvtoisxwsommquvrhswvqlijotvshqwwsomnquuqfotvutrsturmbiosttttsqlg7bfjmnnnlhd9",0.786,0.933,0.433,0.867],["6","0027dhhhgb50028hosstsi8018gquvsrqh707hqwtoihf940douskc753200hswof6332100hrvoieeed940hrwsrppppjc4hrwutrrsvtmbhrvpkggiotshhrukb557hqvjhrtj9224fpujhrvoieefmsuicnutpnnostpd6fnssssttph716cghghhhd71",0.75,1,0.469,0.44],["6","358bdfgfda8669dgiiihda869dhkllkhda77chmoonlhd977fkprqolhda88hmrtrpliecabiotuspmjhfdeiotusqnlkjijjotusqonmmmnjosusqooopqrinsusqoopqrthnrtsqoopqrsglprrqoooppqdhmooonnnnmmaeiklmlllkih7adghiiiigec",0.857,1,0.429,0.833],["6","138ejllkhe8338gostrokg948hpvwtpkgc73eovxvphc8531iswxsld86421ktwvrlgcba74ktwvtronmkfbktwwwwwwvuqkktwwutsstvvsktwurmjjnswvktvtoieejqvvkuwvqmiimswuhrwwvsrrtvuqclswwwvvvuqj6dkpqqqqqnhb16bfggggfd84",0.786,1,0.464,0.8],["6","001gsssssj40018qwtttuo605douvplllf30iuwvsf876300nvusg4000000mtrka6554200mtssonnnmc20msruuuuuvo71mtsuvvvvwuk9mtspkjjjouvimtpe4222bqvimtpc2000aqvimurg7556ervimvvqmlllpvvhanwwvvvvwuj81aorqqqqqi50",0.704,1,0.481,0.75],["6","125afikkie8314ahnrttqkc549gotwwvsld69gotwvtroib6fntwwtpmje85jsxywspmie97luyyxusqokeamuyzyyxxvsmhmuyzzzzzywsnmuyyxwvvwxwsluyyvsrruxyuktyxurpquwyvirxxwustvxxtemtwxxwxxwto9flqtvvvurmg47chlnnnlid8",0.786,1,0.464,1],["6","002ahiiiic4003alstttuk603ajssplkld40fmrtne877410ousnd4000000ouri84444210ntrmihhhid51krrsssssuqh8hqrqonnnrtsjfprlebbbjrvofpqg5112dpuofpqi8556fqupepspkiijotun8jrusssstuqg28hnnnnnnmf6015abbbbb940",0.8,1,0.475,0.657],["6","015afklkhc6225binqqoke726cjprrolhc73bjqusojfd964fpvwsnifda76hrxxuqnljgcajsxywvutrojfjsyzzyyyyvqkktyywutuwwupktxxtqopsvvrjtxwtpnosvwsisxxvsrruwwreouxxwwwxxuoaiptvwwwvtoi5bglopqqomhb248cegggfc95",0.786,1,0.464,0.9],["6","0137bfhgd841138flqrqle7337emsvwuph967elsutrple88bkrutpnkhb89fpvwtpnlid9birxxvtsqojffjsxyyxxwvrljktyyxwwxyvroktxxurrtwxurktxvrmmpvxvsjsxvrmmqvxvrgpvwussuwwsoaiquwxxxwtmh5biostttqle9149eiklkhc73",0.667,1,0.467,0.9],["6","003bjjjjha1003bmuutusg303cmtvsppmc20covxqhcc9401jutod5110001muqh63322101muqlfeefd711musrqqqrqi72mussqqqrusj9murleeegovsfmuoc2125isrgmuoc2225isrgmurkeddgntrggstspppqttmb7jqsrrsssmb417ehhhhhha20",0.714,1,0.476,0.571],["6","016chklljf9415dmsvwvuoe66dmtxxvtqlc5cltwwtokhd74hrwxvqkfb742itxxuqmifb63jtwxwusrpke8jswwwwvvusmgjtwwusqqsutojtwuqlhinsvtjtwuoiefkrwviswvrnkkotwufqvwvtssuvvqakrvvvvvvupj5bhnpqrqpmg9148cegggeb73",0.733,1,0.467,0.875],["6","259dgjjjhd965afknpppmhc8agnrttrpmhcaelrttrolhda9ipvusokgd988lswvsokhda99lsxvtqnljgeelswvutrqpnljlswutsrsttrplrvsqonprutslrvrnkjlpuuulrvrnkjlpuuukqvtqonprutshotttsrsttqodjoqrsrrqokh8chjlmmlkhda",0.8,1,0.45,0.867],["6","2368bdffec97369dgijjheb96aeikmmlifb99ejmoppnjgcachnqssrokgcafkqtutsplgcbhnsvvusplhediotwvurpmjggiotvusqpnmkkiotvtsqpponniotvtsqqqqrrinsutsqqrssthmrttsqqrrssfkprsrqqqqqqcglopqqqqpnm9chkmnoonljh",0.75,1,0.438,0.778],["6","0027eknnke72138gotutqkb438gouvtrnia58gpuvsnjgc74dnuwvqlgc732hrwwuqkgd842isvvuromjf96isvvusrqpnidisvutrooqrqmisvurnjinsutisvupidciqwwisvtohcciqvvhrvvrmiimsurdnuwvsrrstqk8gouwwwwupia38ejmnnmkf93",0.733,1,0.467,0.875],["6","147cgjkiea5348djnqqmic748dkpstsnic76djqssqmid967houusplgb757krwvsplgb768lswusplifb9alswusronlifflrwtrpooonlllrvrolkmprrqlrvqmifinsttlrvqlhfinsttlrvrnjhkorrriputronoppnlekpqpoonmkge9eikkkkjhea8",0.727,1,0.455,0.8],["6","259ejnonkfa65agnsuvurle9ahotvvuspkeafnsvuromjfb9jrvvsokifc88mtwvsnljgda9nuxwurqpnjfdnuxyxwwwvrmjnuyyyxyyywspnuxxvtuvxxvtnuwvspqtwyxumtwvrppsvyxvksvvtssuwywugotvwvwxxwtpahnsuvwvurnj59ejmooomiea",0.714,1,0.464,0.96],["6","0037beeedc84028floonmjc627fntuspnkc68fouvtokhd84dnuxungb8631isxwrkd87531jtwwsnigfe95jswwutrqqojejtxxxyyxyxtnjtwwusqpsvwujtwuqlhhlrwwjtwuoiddjqwwiswvrnjjnswueouwwussuwup8gnsuuuuutoh38dilmmmmje8",0.786,1,0.464,0.767],["6","0009nrrrph50003gvzzyxn6037grvronkc30cnuvod874200mxxod6320000oywi87642100nyxqkjjhf920mxzyxwwwvm81lxyxwwwwwulakxxleeefisuklxvc00017nvnlxwd11107pwnmxxj9988drxnjvyuqppprvukajtyzyyyxsi826fnoonlke51",0.704,1,0.481,0.625],["6","258bfhjjifca58cgjlmmkhdb8chloppnkhdbbglprsqokgcbejpsutrokfbagmsvvurokgccintvvtrolifejouwvtrpnliijouwutrqponnjotvutrqqqqqiotvusqqqrrshmrutsqpqrrsfkpssrqqqqqqchlopppooonm9cgjlllllkji69ceghhhhged",0.75,1,0.438,0.778],["6","016ehhhhd60004grtsstob105epuspoqla10gqvvnfcda400ovtod3111000nspi95554100nsqmjjkjh920nsstttttslb4nssrppppstncmtqkdccekssimtnc2113dorjmtoe4445fosklutojiijotumepuvttttuvsi5eputtttuph804cjjjjjjd51",0.8,1,0.475,0.8],["0","38dfggggfb728gmqrqqrplf7dnuwvuuvvsmehrwvropsvwriiswrkefmtwskhsvoe68irvrkisvnc45gqvrkksvnc45gqvrknsvnc45gqvrkptvnc45gqvrkqtvoe68irvrkqtwrkefmtvrkoswuroosvvqjjouwvuuvvtnfbiorssssrnh95afikkkkif94",0.786,1,0.464,0.5],["0","0aoomje941000bqrrpke83100aprsspjb52007ilpssme72004bfkqsnf830026bhosnf930014agnsng930013agnsng930014ahnsng930025bhnsng93004bglqtnf93007hkorsme83009nprsqkc6200bqrrqmg941009nnmkgb621006ggfda62100",0.364,1,0.455,1],["0","0000000000001245554322356bhklkiea9ejfmqqprsqkkqtmtqkhltxsswumsnc8eqyvvxrlrk84bpyvvxqlrk83bpywwxpmsl95dqyvwxqouoeagryvvxsovtnkouyuuxvmsvvvvwuootxfjorsrpkfflq68cefec866ad122333211123000000000000",1.071,1,0.464,0.657],["0","38ktuuuuuoc3alvzyxxyyxpdivytnklnqwxnjxwl8468esypkxvg30028pzqmyue20005ozrmytd20005ozrmytc10006ozrmysb10006pzrnysa10007pzrnysb10017pzroytd10017pzrpyvi7545crzrmwxtomlmqwxoakuzzyyzzwod17jstssttma2",0.731,1,0.481,0],["0","dmnnnmkie952frqqqqpoje84htrqqsstoib5fplkknqtpkd6ckfddinsple7af977djqoke79d645bipoke78c533ahooke78c533ahooke79d645bipoke7af967djqoke7ckfddinsple7eplkknqtpkd6htrqqsttoib5gsrrrrqpke84eopppomjfa62",0.5,1,0.45,0.667],["0","0134444431002anrqrrrn920irvvtssuvrh5rzugaaabnytarzs70001gyucqzs70001fyvcpzs70000eyvdozs70000dxwflys70000exwhiwr80001exxigwra0000cxykfwsc2111dwynduulgfffnyyl6ipuvvwwyxpc13corrsstm82001344555310",0.88,1,0.48,0],["0","028ehiiihd7239ipttttsog78hquusrsutoedntrnjhimrrjeosmf858enrlenqja202alqleorka202alrleorka202alrlgoqka202alqlhoqka202alrlgoqka202alqlforkb414bmrleotpjfdfjqskakrspnmnqtpg5dlqsssttqja15afhhhhhf93",0.688,1,0.469,0],["0","79ceghhfda74adgklllkifb7dhloooonnjfafknqonnnolichmpqnllmpnkejnoojggjnmlelpomgddglmleoqolgccfkllerspmgddglmleuurnjggjnnlfuurpmllmpnkesssrqpppqnkdnnopqqqpplhbhikmoqqomid8bcfhjkkjhd96679bdeedb863",0.667,1,0.444,0.5],["0","01578888741026cghgghgd519hoponnppne6gqsnhdehlpjalvukb559gomdkush6005dnldjsrg6005donefoqf6005eopgckpf6005fqriaiof6006grtj9iof7006hsukaipjd88cluvl8hqokhgjotsh5blpqpppqpka14afgfffge93003577777520",0.867,1,0.467,0.167],["0","5ppppnkfa5205srrrsroha415pmlorutnd614kffjptupf613gaafmsupf613f78ckrtoe613e77bjqsoe613e77cjqsoe613f78ckqspe613g9aelrtpf614keehnstpe615pllnrutoe616usstuvslc516wvvvusoh9315rsrrpmhb5203iiihfc95210",0.5,1,0.464,0.75],["0","06fjklkkg7104gvxyyyyvi61gsxvtstvxtl9qzsgbabfqzwhpyo60015kyxjnxm50003hxyknwm50001evylmwn60001asyloxq800006oynpzta00004myoozvc00004lyplxud11116oyqixwleeefjtzsdrxwvvvwxyxp4cnwyyyyyxod018hlmmllj92",0.778,1,0.481,0.025],["0","7bgmpqpomjd8diosttrrqokdkosuspnmopniosutoifgjopkruvskd8bgmplsuvria58elolsvvria47elplsvvrjb58elpltvwskc69fnqmuwxunf9bhornuwywqjeglqsnsvxxuplmpssmorvxwussstqkhlquwvuutqmf9dinqrqpnkf9369dghgfeb84",0.714,1,0.464,0.44],["0","000000000000011222211112369cddca889b7cfiiihgffghbhlljjklnnnlflomiilpttrnhnojcdiouvsmhnnibchouvslinojcdhouvsmkoplfgkpvvtnnqqollnqttsqkmnnmnnnnnooggijkkjhfghja9bceeca889c112222211112000000000000",1.286,1,0.429,0.5],["0","5ejjiigc96416hnnmmkgd9526jponomjfb726iommonlhd835gkijmmlie934dgeejkkifa33ac9afiihfa338a67dghhfa338a67dghhfa33ac9afiihfa34dgeejkkifa35gkijmmlifa36iomnoolid936jpooonkgc726ionnmkhd9525fkkjigda741",0.375,1,0.438,0.5],["0","24688753223569cefeb8668bafikkjheccehfkopoomlkjlnjnpnmmnopppolookjknrttromomgeglrwvrmlnlfdekrvvqklnledekrvvqkmnmfeflrvvrlmookjknruusolopnmmnprrqpilooonllllnodgjkkjgfeegj8aceeda878ac245765421235",0.889,1,0.444,0.6],["0","01fpppppof303apwuuuuvsd2gqvsnnnnswqdrvxk888anwvnruwg0003kvuoruwg0002jvuoruwg0002jvuoruwg0002jvuoruwg0002jvuoruwg0002jvuoruwg0002jvuoruwg0003kvuorvwj7779nvvomtvsoonotwti6cpwwwwvwsf501clmmmmlf40",0.778,1,0.481,0.1],["0","01677777620006osssssp9006hrrqqqruk71grslgggissm8frpd3336ossderoc0003nsteernd0003nsteerpf0002lrtefsqi0000dqsfgtsk00008oqihutl00007oqigutn6666cqqkbrvvqqqqrusm3itvsssssurf03esrrrrsoa2003899999710",0.852,1,0.481,0.063],["0","000000000000269abb9644699glnoomhcchmhquvwwwsnnswmsrpquxxuuxxnqlgipwywwyulogbcmvywwytmog9bkuywwyspqhaakuyvvyrstkcckuyvvystvoiiovyvvyuswurruxxuuxxovxxxxxtooswelpqqpojeein59bcccb7546a000000000000",1,1,0.464,0.686],["0","18fihhhiid509jrttsstupf6jrspjiikpspfpurh7668hqtkoupd1002coskouoc1002coskoupd2001cotmltqe2001counhrrg4001couogqrh4001couofprh5001couofprj9556gquodpspkiijotun8irusrrrsuqg27hnnmnnnmf6015abbbbb950",0.8,1,0.475,0],["0","9fjkjjkkif94hpsrpoqrroh9nvuqmlptwtneqxsleekrvvqgrxqh87fouvrhrxpe44cmuuqhrxpe44cmuuqhrxpe44cmuuqhrxpe44cnuuqhrxpe44dnuuqhrxri99gpuvqhrxuoihmswvrhowwurrtvxvpejrvwvvvwvrkacjoqqqqqojc55aefffffea62",0.786,1,0.464,0.5],["0","38eiklkiea52ahorsssqojc6iquusqqrsrmcouvrmjjmqtsiswtmfbbfntvltwqh844ajswltwpf5128isvmtwpe5128isvmtwpe5128isvmswpf5128isvmswqg7339jsvlswskc88dltvlrwvpkhhkqusinuwvsrrstsmcgpvxwwwvsmd68fknnnnmic52",0.733,1,0.467,0.167],["0","28fkmmmkhc726elrsrqqokd69jpsronprrkbdmsrmhgkrupfeotrkdbhqvrhfpvrjbahqwsifqwrkdcjrwsigqwsleekrwsjirwslddjqwsjktxtmfekrwsjmuxupkjntxsjouywtrqsvwrhnswxxwvwvtnejosvwwvurng9cgkoppomje9468beeeec9631",0.786,1,0.464,0.567],["0","14ahmnmmkga449iqvvvvtpia8gpvyxwxxuogcktxwursuwskenvxtokmqvtlgovwpicgmtslhpvule7djrrjjputjc5biqqikpusib4ahqpilptria5ahqqjjosrjc7cirrkgmssmidhmsrkcjruspnprtph7fouwvuusqkc39hpuuuspkd7149fjkkifb63",0.667,1,0.467,0.4],["0","5pppomje95205sqqqpolg9415olkknppld514jdcdinqof613e758elpof712b425bjonf7129213ainne61281039hnne61281039hnne6128203aionf712b435cjoof713hcbdhnqof715ollmoqpmd615ssrrrqmha415qqqqolgb6203ggggec95310",0.5,1,0.464,0.5],["0","29glmmmmlf928iossrrssoh8eopnkhikpqoejspjc99elrsiktne6239iptiksmd4017hptiksmc4017gotiksmc4017gotiksmc4017gotiksmc4017gotiksmd4017gotiktne5228hptijtpib78dkqtiirqnjghkorqgclprrqqrsqlb5cgkllllkhc5",0.733,1,0.467,0.167],["0","25bgkllkifa55biorrrrpnicahotusqrrrohfmtvsplmpsrliqvvqkghlqsnjrvuoiceiprnkswungachoqnmswtmf9bgnpmotvtld8afmplquwsld7afmplsvwtmfachoqmtvxvqlhimrsosuxxurppsutoorvxxwvvvvsmhlquwxwwusnhadimpqqpnkfa",0.714,1,0.464,0.4],["0","8elpqqrqojb4gntxxwwxwsj9oswvsppswwofruwslfgntwqisuwpf78irwrjstvod46grvrjstvod45gqvrjstvod45gqvrjstvod45gqvrjsuvpf68irvrjsuwrkefmtvrjrtwvqnnsvvqilpvwvttvwuofdjpttttutqja5aglnooonjc5137bdeffda51",0.733,1,0.467,0.5],["0","39fihhhif9309jprqqqrpj92fpqokkkoqqh8irmhbbbhntpfirib322bkutjhqg90009kuujhqha0009kuujhsjb1007hqsiitld2004dmrhjvnf3001aiqhkvof30009hqhjvrld99ahlsiiturnlllpqukbltwwvvvwush5clruuuuuqka03agjjjjjf92",0.75,1,0.469,0.08],["0","9acdfffedb86efgijkjjifc9jkllmmmmljgcooonnnnnnmjfrrpomllmoolisrqnkjjknonjrqolhffhlnmjppnkfddfjmmjnonjeccejlmjmnnkgddfkmmjloomiggimnnjmopoljjloonjnpqqonnoqpmimopqppppqolgjlmoppppolieghikmmmmkiea",0.75,1,0.438,0.333],["0","16kssrqqpg306gtzzzzyypa2itvqnllnsum8qzsd6556iuscszq80000eutdszq70000euuerzp70000euuepzp60000euueozo60000euuepzp60000csufqzp70000bqugqzq81101csvhqzse8887gtvhnwwspppprvsebjtyyyxxwoe625emonmkib31",0.741,1,0.481,0.083],["0","01cmoooonh4029qwuvvuwud3bpvxvuuuvwsefwuofdcditxkfvsh30008qwkfvsh30008qwkfvsh30008qwjfvsh30008qwkfvsh30008qxkfvsh30008qxkfvsh30008qxkfvsi40009qwkfvtneccciswkcrvvttttuwug3crvttttuui502bjkkkkjf50",0.679,1,0.482,0],["0","59dghiigc841bgknoopnje84imqrrrsrple8oqsqomprrqibrssnifkostmessqjd9flruogqrog84aipuogpqnf73aipuogoqnf73aipuogoqog83aipuogoqph95cjquogorrkebgmrunfpstokilqttmemqtsqprssphailpqqqrqnjc7cfjlmmmkgc73",0.727,1,0.455,0.4],["0","48eikkjjjhd7ahnqrpoprqnfhqttqmlnsvummvwrlfchovxqnvvph96bltyrnvvne528jtyrnvvne528jtyrnvvne528jtyrnvvne528jtyrnvvof639jtyrovvqib8dmuyrrwwtojhkqvyrqtvvtrqsuwvnkmquvvvvvtogcchnqqqqplf9558dffffeb73",0.786,1,0.464,0.333],["0","03adeeeed6107eputttttk93luvtpoopsvrerzug8777euzlrztb00008rymqzta00007rzmozua00006qznmzua00006pznjytb00006pzohxtb00006pypeusc10006pyscsrd20007pzvcttkcccchtzu8lqsssssuyum26epuuuuuui7004adddeed50",0.84,0.962,0.5,0],["0","7behjjjifb73ekostttsple7mrvxxwvvvsldrvxwtqpruvqhtxxuoihlrvrjuxxrjcbhourjuxxqh98enurjuxwqh98emtqjuxwpg87dltqitxwpg86clsqitwvof87dlrpirvvphcbgmrohnstqmjiloqmehnqrqooppnhaafknoooomib648cfhiihfb62",0.786,1,0.464,0.5],["0","038ccccc951029hmnnnnke517iprpppqqnd6cnsniggkpslceoqha66cktpgdmoe5118itqhdlpe5007htridlrf6006grridlsh7003cnrhdlth7002akqhelti9223bkqhektoiddejotjcistsqpqsttj6bltxxxxxuod24bkprrrqle60039deeeea51",0.813,1,0.469,0.067],["0","01455555520005imllllme10distssssuqe5stumggghourdsstb0002fsqgssta0001esqgrss90001fsqhnsr90001gtrkirrb1001gtsnerqe1001gtsndrpf2001gusodrpg2001gutoesqldcccmutoaottrrrrturj29mqppppqqg5016cddddca30",0.846,0.963,0.463,0],["0","0000000000001367777532354afijjiea8bf9iorqqqnjhkpeptspqttqprvgrsnhiptuuuugrqiablsuuurgrog79jruutpgrog79jruutqgrpi9bksuuurhrsnhiptuuutiptspqturqrvejpsrsspkikq8chkllkgc9bh346888864346000000000000",1.1,1,0.45,0.5],["0","38fkmmljgb637fmsuuusojc6bkswxwwvtphafotusqqrssmdiqtqnjjmqtofkrtoiddiotphmtuoicchotqiouvqjedipurjrvwrlffjqvsjtwxsmggkrwskuxxtnihlrwskuxyvqmmptwsjsvyxusrtvwrimrwxxwwwvtmefkquvvutrmf97bhlnnnlid84",0.786,1,0.464,0.5],["0","0000000000002466654322359gkkjihd98dihoqonpqojinrnspjiouvrqutqtldcktxttwprtkbaitxtsunrskb9itxsstlqri98htxtstkpri97htyuttkorjbajtyvuvnnsplkpvwssurjqsrrttqllqtcimnnmkfcchl356776643356000000000000",1.077,0.929,0.429,0.571],["-","0000000000000000000000000000000000000000000000003444444443328bbbbbbbba97fklkkkkkkkiemsutttttttqlmtvvvvvvvvsmglnnnnnnnnkg9cdddeeeedb9345555555543000000000000000000000000000000000000000000000000",2.5,0.286,0.464,1],["-","000000000000000000000000000000000000122222222221678999999876acefgffffecabdfggggggedbbdfggggggfdbaceffffffeca9bcdeeeeecb989abbbbcca98456666677655111111122111000000000000000000000000000000000000",5,0.125,0.5,0.5],["-","000000000000000000000000000000000000000000000000000000000000000000000000aegiiiiiiiiemtwxxxxxxxxrmuwxxxxxxxwrbhhhhhhhhhgd000000000000000000000000000000000000000000000000000000000000000000000000",4.75,0.148,0.5,1],["-","0000000000000000000000000000000000001112222211103345555543215789999986539cdefffedb96cehiiiihgeb8cfijjkkjhfb8cfhijjjigeb8acefffffeca778aaaaaaa875233333333322000000000000000000000000000000000000",3,0.222,0.389,1],["-","00000000000000000000000022222222222156677777765489bcccccca97bdfhhhhhhfdaehjlllllljgegjlnooooolifgkmppppppmjggjmopppppmjgdfhkkkkkkigdacdffffffeca678999999876223333333322000000000000000000000000",2.5,0.25,0.438,1],["-","0000000000000000000000000000000000000000000000000000000000008abaaaaaa974glmmmmmmlje7kstuuuuutpi9horsssssrng79ehhiiiihe93357777887531000000000000000000000000000000000000000000000000000000000000",3.667,0.2,0.533,1],["-","0000000000000000000000000000000000000000000000000000000000003455666665438befghhhgfc9bgjlmnoonlhccgjlnoppomic7bdefghhhfc8344556666543000000000000000000000000000000000000000000000000000000000000",5,0.143,0.464,1],["-","000000000000000000000000000000000000000000000000689999999753bfhhhhhhhea6gloooooonkfainrsrrrrqnhbglppppppolgabfhiiiiihfb768abbbbba964245555555431000000000000000000000000000000000000000000000000",2.667,0.273,0.455,1],["-","00000000000000000000000000000000000000000000000022222222222289aabbbbbaa8cefghhhhhgfdfhjkkllllljgfijklmmmmljhcefghhiiihfd7899abbbba98122222222222000000000000000000000000000000000000000000000000",4,0.143,0.464,1],["-","0000000000000000000000000000000000000000000000000111111111104789abbbb9759ehjkkllkjfaekoqrsttsqmfflqstuuuusngchlopppponjd7adefggffdb7111111111111000000000000000000000000000000000000000000000000",3.333,0.2,0.467,1],["-","0000000000000000000000000000000000000000000000003344444443328abbbbbbba86eghiiiihhgd9hklmmmmmlkhcgjkkllllljgccdeffffffec8678888888865222333333221000000000000000000000000000000000000000000000000",3,0.2,0.467,1],["-","000000000000000000000000000000000000000000000000000000000000456666666654fllllllllllgnuttttttttuojpppppppppql9dddddddddeb233333333332000000000000000000000000000000000000000000000000000000000000",3.75,0.2,0.475,1],["-","0000000000000000000000001111111111113344444444335677877777658abccccccba8cefhhhhhhfecdfhjjjjjjhfddfhjjjjjjhfdcfhiiiiiigfcacefggggfeca9abcdddddba8567888888765222333333222000000000000000000000000",2.5,0.25,0.438,1],["-","00000000000000000000000000000000000000000000000012233333332235799aaaa9757cfhijjjjheacinpqrssrqmfdjoqrssssqmfafiklmnnmkhc58acdeeedca7233455555442000000000000000000000000000000000000000000000000",2.5,0.286,0.464,1],["-","0000000000000000000000000000000000000000000000001222222222107aabbbbba962fklllllllid6muvvvvvvvrlbmtuuuuuutrlcfjkjjjjjjhe8799999999863122222222211000000000000000000000000000000000000000000000000",2.75,0.267,0.433,1],["-","0000000000000000000000000000000000000000000000000000000000004556555554329bcdccccba85fhjjjjiihgd9gjllllkkkifaehiiiiihhfd989aaaaaa9875000000000000000000000000000000000000000000000000000000000000",4.5,0.133,0.433,1],["-","000000000000000000000000000000000000000000000000689999999875dikkkkkkkjgbkqssssrrsqngnuwvvvvvvuqkiprssssssrnhcgjjkkkkkigc58bccccccb96134555555432000000000000000000000000000000000000000000000000",2.5,0.267,0.5,1],["-","000000000000000000000000000000000000223333333221678999988754aceeeeeedb97ehjkkkkjigc9gjmnmmnmlieagjmnmmnmlieaehjkkkkjigc9acdeeeeedb96678888888754223333333221000000000000000000000000000000000000",3,0.25,0.438,1],["-","000000000000000000000000000000000000000000000000000000000000577777777764cggggggggggbjpppppppppohkqqqqqqqqqqjfjjjjjjjjjje799999999997000000000000000000000000000000000000000000000000000000000000",3.667,0.188,0.438,1],["-","0000000000000000000000000000000000000000000000000000000000003455555556538dggggggghe9emqpqpppprnedlpopoooopme7ceeeeeeeec8234444444442000000000000000000000000000000000000000000000000000000000000",4,0.188,0.5,1],["-","0000000000000000000000000000000000000000000000001111111111118cefffeedca7fknooooonmjdjptuvvvuusoihnrsttttsqnhbfijkkkjjifb5789aaaa9875011111111110000000000000000000000000000000000000000000000000",3.333,0.214,0.429,1],["-","000000000000000000000000000000000000000000000000000000000000000000000000chiiiiiikmlfoxxxyxxxyyxqmuuvvuuuvvuo8dddddddegfa000000000000000000000000000000000000000000000000000000000000000000000000",4,0.185,0.481,1],["-","0000000000000000000000000000000000000000000000001111111111117acdeeeeeca6chkmmnonmkhbeknpqrrrqojdchkmnooonlhc8bdefgggfeb8356678887653001111111100000000000000000000000000000000000000000000000000",3.333,0.214,0.5,1],["-","0000000000000000000000000000000000001111111111104556777766439acddeeddca7ehijkkkkjifbjmnoppppomjeilnoppooomidegiijjiiihea9abbccbbba86445555554432111111111100000000000000000000000000000000000000",2.25,0.286,0.464,1],["-","0000000000000000000000000000000000000000000000001222222222217accccccca85dhkkkkkkkie9hmqqqqqqpnichmqqqqqqpniceikkkkkkkie98acccccccb86222222222221000000000000000000000000000000000000000000000000",4,0.182,0.409,1],["-","000000000000000000000000000000000000000000000000000000000000000000000000ejjjjjjjjjjcqvttttttttvnlpoooooooork8deeeeeeeef9000000000000000000000000000000000000000000000000000000000000000000000000",4.2,0.185,0.481,1],["-","00000000000000000000000000000000000000000000000013455555553258bddddddc96agjlllllljgbhnrssssssqmgiorrrrrrrqnhekmnnnnnnmje8cfggggggfc8356777777653000000000000000000000000000000000000000000000000",2.5,0.267,0.433,1],["-","00000000000000000000000022222222222155666666665489abbaaaaa97bdegfffffedbehjkkkkkkihefikmmmmmlkiffikmmmmmlkifehjllkkkkjhebdfggggggfdb8abccccccba8566777777765222222222222000000000000000000000000",2.5,0.25,0.438,1],["-","0000000000000000000000001112222221113345555554435678999997658abddeeedca8bdgiiiiiigecdfikllllligddgjmmnnnmkhedgjmmnnnnkhecegijjkjjhfcacefgggggeca6789aaaaa986223333333332000000000000000000000000",2.5,0.222,0.389,1],["-","0000000000000000000000000000000000000000000000000000000000007abbbbbbba85glmmmmmmmlicmtutttuuttqhlrrrrrrrqqogdggggggggge9576666666654000000000000000000000000000000000000000000000000000000000000",3.667,0.2,0.467,1],["-","0000000000000000000000000000000000000000000000003567778877538cfghiiihgd9eknpqrrrqplehotvwwxxwuqiflqstttssrngaehjklkkjifa579abbba9975123344333221000000000000000000000000000000000000000000000000",2.5,0.267,0.5,1],["-","000000000000000000000000000000000000122222222221678888888876acdffffffdcabefhhhhhhfdbcfhjjjjjjhfccfhjjjjjjhfcbefhhhhhhfdbacdffffffdca678899998876122222222221000000000000000000000000000000000000",5,0.143,0.429,0.5],["-","000000000000000000000000000000000000000000000000000000000000111111111111dhhhhhhhhhientsssssssttomssssssssstodhhhhhhhhhhe111111111111000000000000000000000000000000000000000000000000000000000000",4.667,0.143,0.476,1],["-","0000000000000000000000000000000000000000000000003567777765427acdeeeedb85cgjkkkkkjgc8ekopppqpokf9ejnoppponkf9bfhiiiihhfb768abbbbbb964245556555432000000000000000000000000000000000000000000000000",2.667,0.273,0.455,1],["-","0000000000000000000000000000000000000000000000003566666655438bdfffeedca7chlmnnmmljgcfmqsttssrpmgflqsssrrqolgafikkkkjihfb68abbbbaa986234444433332000000000000000000000000000000000000000000000000",2.5,0.286,0.464,1],["-","0000000000000000000000000000000000000000000000001122222222103689999997429ehiiiiihfb6gnqqqqqqqoldipqqqqqqqpnfdjkllllllkib6accddddcb95123333333321000000000000000000000000000000000000000000000000",2.75,0.267,0.433,1],["-","000000000000000000000000000000000000000000000000111111111111689999999986dhjjjjjjjigckqsssssssroilsuttttttspiflmnnmmmmlid8bcddddddca6111111111111000000000000000000000000000000000000000000000000",3.333,0.214,0.429,1],["-","0000000000000000000000000000000000000000000000002333333333218ceeeeeeec84fmooooooomg9mvxwwwwwwupfkrsrrrrrrqnedijjjjjjjifa69abbbbba973122333332211000000000000000000000000000000000000000000000000",2.75,0.286,0.464,1],["-","0000000000000000000000000000000000000000000000002222222222218accccccba85dhkkkkkkjhd8flppppppolgaejnnnnnnmkfaaehhhhhhheb7579aaaaa9863112222222211000000000000000000000000000000000000000000000000",4,0.182,0.5,1],["-","0000000000000000000000000000000000001222222221114667777654328abccccba864cfhiiiihfda7fikllllkifb8filmmmmlifc8ehjkkkkjheb7bdffffffdb96789aaaa98764233333333221000000000000000000000000000000000000",3,0.25,0.438,1],["4","0000148cec7300025ahlmjc60026cjpssof8016dlruvtpg826emswxwtpg87entxzywupg9dntxyyxwtqibiswxyyxwusnhktxxxyxwvusnjsvvvwxwvvuqelnnnqtuvurm8cdcdiosusng23434ajqurjb000016fospg8000004bimkd60000027bec83",0.786,1,0.464,1],["4","0000029ec300000008qwt90000005kuss900003dotsqr90000asvwurqd1018lvtssspg20epuvreisph20qvwxn9itqm61qruvqnrsqtl9qsrsrrrqprshjrrrrrutqurd5aabbbmvsrb3000000dsto400000006mtq900000003kvp800000001ahb20",0.815,1,0.481,0.861],["4","0001359cffec011369dhklih0236aejnqqnl236aejoruuqn47afkosvxwro6afjosvxyxspaekosvxyzxtrchnrvxyzzxusejptwxyyyxutejoruvwwxxutbgknprtuwwut9cfiknpruuts68acehlorsrq34679cgkopom122347bfjkji0001147beffd",0.75,1,0.438,1],["4","000003botl7000002bpxzq900003anxzzq90003dpwzzzr9003cqyzyzzr9029nxxutxzra0dmuysjlvzsb1nwwsmgkuytg6pxwsqqswyxsinwwvwxyyyzyoelmmoquxzxsh35678bjuzth6000013cszrb1000001aqyq900000019oxn700000005fle40",0.731,0.963,0.5,0.839],["4","001136aegea501259djnomga036bhmruvrle15biptwyyuoh39hpvxyzyvpj7fntxyyyyvqkdlswyyyyywrmhpvyzyyyzxtolsxzzzzzzyvqlswyyyzzzywriosvvwxyzyvrchlopruwyxto69cfhkpuwvpj2467adkqtsle112358flonha0001249fhgb6",0.769,0.867,0.467,1],["4","0000013565310001259egd7200137cinpkc50027dkquvpg8015ckrwyxsja25ckrwyzxskc5cjrvxyyxtldajrwyyxyyunfdovyyyxyywqjeovyzzzzzxtmbkrvxxyzzxtm7djnpsuxywqi36adfjntvsld123469fmqng80001138eiha4000001368841",0.917,0.8,0.433,1],["4","0000019hic40000028lruk7000028irstl80002akrustm8003amtvwutm902akttqsuum90clsuqikruma1jsuvqjmstpi9hrstsqrsrrrjeoqrrrrrqrtm8fhhhhkorroe245566alrqh50000004irqe20000004isrf20000002dnmb100000015a940",0.8,1,0.475,0.857],["4","0000004iph40000001cswq8000013cpttra00004itwtsra0003csyxvtra003eqvupsura06isxuhdqura0jvxxp88purc1ovuuoijrssmcovtuuuusrtvoitttttttsuuk59aaaafruth50000007pura00000006pura00000006qwr800000004gmg30",0.778,1,0.481,0.85],["4","000000389400000002cpob1000015dpwsd100017jswxsd10004ivywwuf1004esywrvvi306gsyvmkuvj30huyxqehtwl50nyzwqlnvxrf7nzzyxwxyywsjiuxxwwxyywtj6cffdejtywi70011016oyuc10000003kxvc10000001futc100000008ih60",0.808,0.963,0.463,0.843],["4","0000028gkha3000027gosoe510138gnstpf61038gpuvupf6138gotvvupf659horrrtupf6aiptqmlptpf6fpuupjjosqi9jtvtpllpsrmdjsutrqqsttqhfnppoprsttqh9eggfhlqtsmd356669fnsri9100003blrpf6100003akroe51000027eiha3",0.733,1,0.467,0.833],["4","011359ejlid81258chmrrnhb36afkptwvrkd5agmrvxyxsmf8fntxyzzxunhckrwyyyyyvpifouxyyyyywqliqwyyyyyzxsniqvyyyyzzxupfnsvwxyyzxupagknpruwywsn58cehkptwupj13469cjqtrlg001247elpnhc000124agihd800001269ba74",0.769,0.929,0.5,1],["4","0000029ijb20000028kuth3000018jsvuj400029luwvuj41029kvxxwuj412aluwuvxvj41bovyrlpxvj41juwvmhnwvm83mvvuposvurj9mvuuvvvuuwsfhpoooqtvutmb7bbbbfowvoc4011115jwvj51000004jxvj40000003gtth400000029hia20",0.714,1,0.476,0.833],["4","0000015afgc6000014bjqqjb00137dkrvvnd0038fmsvxvoe028gouxxxvof38gnuxxwwvof8gotxxxwwvqhenuwyyxwwwslhrwwxxwwwwvqgptuuvvvvvvsbinpqrstvvup5aehiloruvrl1369adiouvpg012336cksune0000027fnpja0000014afhc6",0.733,1,0.467,1],["4","0000037bdb72000016dknkc500125ckruqh80037dkquwsjb006dlrvwvskb13aksxyxvskc49hpvyyxvtkc9hpuxyyxwuldfpuwxyyxwuohirvvwwwvvusngorsstuuvutpahklmpsuvurn48bdfjptvuoi13568emsvtmd001239hospia000015bilic6",0.786,0.933,0.433,1],["4","0001259cc95100136bhlkg940148djpsrld6138elrvxuog938elrvyywqib8elrvxyywqjcdlrvxxxywrkdkrwxxwxywsmfovyyxwxyxupjouxyyyyzywrmlsvxyyyzywsmglpsuvxyyvqk9dgjlpswwsmf4579cgmrsog9001247ekmib50000138dec72",0.833,0.8,0.433,1],["4","000016bgc82000015ekqkd400025dlquph51016dmrsuph6115emsuuvqh616emrssswqh61enstopqwri72ksuuopqvsmc6luuurrsusqlcirrssssssspfdjkklloqsqmc6aaaacjosmf5223334eltjb1000001cktia00000019gnf8000000059e940",0.8,1,0.467,0.9],["4","00012479a987001247beeeca01248chjkifd1258chmoomif258chmqsspkh58chmquvurmj8chmqtvwurmkbglqtvxxvsomejptvxxxwtqofkptvwwwwurpdimpstuvvurqbfilnprtuurq8bdgiloqssqo579bdgknppnl23457bfikkih011246adffec",0.75,0.889,0.389,1],["4","001357acdca801358cfhigdb1369dhlnnlge369dimprqojg69einrtutpkh9dinruwwurljchmruwxxvsnlejotvxxxvtomejpsvwwwvtqodimqstuuvtqobeilnprsutqo8adfiknqrron568adgjmoomk23468bfikkig111247bdffec00012479bba9",0.75,1,0.438,1],["4","0000019ii91000003aluti3000019pwxvk40002anwyywl5003anxxvxwm502bovwsptwm50cnwxqghrwn60nxwskcfrwpa3nwwtpoptwunelvxwvwwvwwvnfoppnnptxwsi488866bpyvi60111004mxtc10000003kxsb10000002hvrb100000019ig60",0.8,0.926,0.481,0.841],["4","0000016cgc50000015enrj9000015eouxmc00016eouwxmc0027fovyxxmc017fquwwvxmc07hpwtppsxmc0dovxrmnsxpf4hsxvqnoswrlahrwuutvwwvrgcjnmmoruwuod6addcfmtxrj7012225gqxnd1000003eoxmc0000002cltka00000017dic60",0.75,1,0.469,0.88],["4","0000038ejkf9001249gmrsld0037chnswvof028fmqtvwvpf28gouwxxxvpf8gouyzyxxwqgeouxyyxwwwrjktxxyyxwwwuokuxxyyywvvvtirtttvvvvvvtcjlkknqsuvto69aaadjpuvrj223337enuwqg000004bkstnd0000027elmh900000148bd95",0.786,1,0.464,1],["4","000136acca5300147chjie850137djopoib8036dkqtuskeb37djpuwvskec7dkpuxxwskfddjqtvxwvslgehouvwwvvtnjhkrwwwwvvuqmkkrxwwwvvvsomflpprtuvvrolaeiilpruuqlj68abfkostnhe12337djopjda000038eijf970000259cca64",0.727,1,0.455,1],["4","0000006a9500000002isri2000005irstl200006htspsl20014isuursl2005jrtsuttk207gstqglstk20jrtslagrsl62hqsvsprrqrpgerqrssrpoquo9llllmnqpqoe268888coqod20000005mqm800000004nrpa00000003kqn9000000016b820",0.815,1,0.481,0.819],["4","001236adeb6211247chlkg94136aejprpkc636bgmquvsme86cinruwwtog9biosvvvwuphahotwwvvwvqjclswxwvwxwtmgouxyxxxyyvpjmswxxyyzywrlhmprstvxxupjaegijmpturmg4679adiopnhc011235cikid80000128dfe9500000148a963",0.833,0.857,0.464,1],["4","000147bfhea701248chlokfb1369fkosupje37bglqtvwqlg7cinsvwxwrlhcjpuwyxxwrmigntxyyyxwsokkrwyyyyxxuqnmtyyyyxxwvsqjpttuvvwwvtrfjmnprtvwvsqadffilptvtpm5678bglrvrmi11125biospje000037djmjea0000259dfda6",0.8,1,0.45,1],["4","0000006hmh50000004hsuq8000004gqrsq800008hqussq80014luuxusq8008kswuvutq808kuutklstq80ktusm9gstqa1mtrsnjosrslbmtqrrrsrprtliqoooorrqrqh6ccccdmtssh6012223gstq91000001fstq80000001fsuq800000008joj50",0.704,1,0.481,0.844],["4","00015afije960125bhmppic9026ahosutlfb15agnsuvtmgd49gnswwwtmge8fmswyxxunhfdkrvxyyxvojghouwxxwwvqmkipuvvwvwvsomhmrstuuvvtpncgjknqsuvsom7aceimquvqlj3457cjotunhe11137dinoida000148dhid960000258ab853",0.727,1,0.455,1],["4","000005bif92000003bksoe400026clqvrh60006dnsuuqh7003cnwwvsqh806clsurqqrh90dosvqkknsia0jvwwpjkotmh6kutupmnptpncjtuuutuststjdkllllpqtqpf7bdddelpvpk9012212bjtnf40000008hspf50000004eooe400000029gg92",0.75,1,0.469,0.84],["4","000248cfea510025agmpmg83026biptwskb526bjqvxyumd76bjqvyzzvofabjqvyzzzwphchpvyyyyzwrkfltxzyyyzxuokltxzyyyzywroiqvxxyzzzxuqdinprtwyywso7adfimrvwtnj24579elstpie000138goqle9000025cjkga60000138cda63",0.714,1,0.464,1],["4","00012368aba9011246adfgec11358bfillig2369cgknpplj46aeilortrnl6aejnqsuvtpm9ejoruvwwupnchnruwwwwuqoejpsvwvvvuqpejortutuutqpcgkmopqrtsqp9cfhjlmorrpo68acegilpqon45678beilmlk1223469dgihg00001369cddc",0.75,1,0.438,1],["4","0000017kqk60000003guzs9000014eryzr800005gsyzyp70013dsyxyyo6015frwurvxn607hsxukitxn60huyvnefrxp92kxzvpmotwtkbkxzywwvvwwukfqtsrrruwvqh58a99afrxre5000002aryq90000001aryq800000019qyp700000005gmf40",0.704,1,0.481,0.797],["4","0000027dgd72000138gnplc400038gottne70038hpuvuof8139hpvxwupf94aipvxxwupg99iqvxwwvuphaeouxwvuttqkfhrwwvuuttsplhrwxwwvvvutpdmsuuvvvvvso8eikkmqtutnh36899djptqib000004clqne60000028hmjb40000014aec61",0.733,1,0.467,0.958],["4","0000018jpj81000016hrwpc100027hqtupd10018itwutpd1016ityxuupd128hsusrsupd1aksxriipvpd1luxwmbepvqe2pwvuoilqurmbpwuusssssttkkrqqqrsttutkaeeeeflrusmb011113covqe2000001bovpd1000001bowpc10000017hoj81",0.75,1,0.475,0.771],["4","000137bfeb7300248ejnmha4025aflrtrld725bhnsvxung95bhotwxyvphbahotwwxxvqkdhotwxxxxwsmhlswyyxxyxvqknuxyyyyyyxtomswxyyzzzyuqhnrtuwxyyxtpafilnqtwxvql579cfjptvsmg12358cjqsohb001137ekmjd70000149efd84",0.769,0.929,0.429,1],["4","0012369beedb01247aehjjhf1358bfjmooli358cgkortsol58chlpsuwuqn8chmqtvwxvqobglqtwwxxvrpejotvxxxxvsqejosuvvvwvsqdhloqrstuusrbehjlnoqttrq8acegilorsqp5679bdgkopon223458cfklkj0001248cfhgf00001369bccb",0.857,1,0.429,1],["4","000005dhd60000003equob100014cntupc10006fpuutpe2003erwwvsrg405douurrsrh50gquvpgkqri50nvwwnelrsmc3ntuvqnqssrmcnttutttsrtsihoppppsssspe7bcccdlsupg6011112dpuna10000008ltpc10000004itna10000002aid50",0.8,1,0.475,0.829],["4","000247adeeca01137afhjifd0136afknonjg1369ejorsqli359ejnsuurmj58dinruwvsnk8chmruwxwtolaflptvxxwupnchmruwwxwuqochmpsuvwwvrpbfimorsuvurp8behknpsutqo68acfjmpssom3458beiloolj11236adhjjhf000136aceecb",0.75,1,0.438,1],["4","001269cefb750136afjllfb7137chnqrqjea48diosuuskfb7djptwwvslfcdjquwxwvtmgdhouwxxwvtnjglrwxxxwvuqmjntyxxxwvvspnkpttuvuvvtqofknnprsuvspnadggjnqtuqmj5789dinrtojf12237djorlfb000149ejlgb8000026adfc85",0.8,1,0.45,1],["4","000136befd8400247dinnjd70259ekpttoh914agmruxwrjb39gnsvxywskd8fmswxxxxtmfdlswxxxxxuoiiqvyyxxyywrlkswyyyyyyxtojrvxxyyyyxupgmqstuvxxwtnaehjkmptvupk578abdjpsrlg123347elonic000013agkje90000027cfea5",0.769,0.929,0.429,1],["4","000148dikgc80125afkpqmgc136agmrvvpjf26bhnsvxwqkg6ciotwxywqkhbipuxzyywrlignuxyzyyxsnkjqwxyyxxxuqnjqvwwwwxwvrpgmrstuvwwvrpbfjknpsuvtpn69cdgkoturmj2457aflqtpjf111259flolfb000025afigb700001369ba74",0.727,1,0.455,1],["*","0000000000000013332333210158ba99aa63029gkkijkkd614dmttrstsja39jsxxwxxxqg8gpuxxwxyyuleouwwuuuvxxpensvvtttvxvnahosuutuvwsj49ipuvtuvvpf14ckppooqqi9017cggfghga5003677678741001221112210000000000000",1.1,0.667,0.433,1],["*","000000000000112222222111345677765432689abccba8648ceghihgfda7bfjlmnnmkhd9ejnqrssrpmhcglqtvwvusojegmruwxxwtpjefkpsuvvurniddhloqrqpnkfbadgjlllkifc879cefggfdb854578aaa98653122333333221000000000000",1.5,0.5,0.438,1],["*","000000000000011233444310135788aba74116aeffhihd7239glnmopojb45dmruttvtog8aiqvxxxxwsldfntxyyyzyvphipvyzzzzywrkhouxyzzzyvqjdlrvyyyywtnf8fmruuuusog94agkmlmnlhb526addcdeda62124554555421000000000000",1.111,0.643,0.429,1],["*","00000000000000000000000000222112321012699768994126dijfegjib54bkqronprri99iqvxvuvwwpefotwxvvwxwsjfotvwvvwwwtkclrvwwvwwvqh6enuxxxxwtlb39iorrrrrof725bfhhhiif94014566666531000000000000000000000000",1.375,0.533,0.433,1],["*","000000000000012222222211258aa999985349dghhhhge957cinoooonje8biptuuuuuqkddlsvwxxxwtnfemtwxyyyxuohfntxyyyyxvohcjqvwvvwvsle8flqrrrsroha5afjkkkkkhc6269ccccddb74124555566542001111111110000000000000",1.333,0.545,0.5,1],["*","011111111110123344443321245789987543469bdeedb9646adgjkkjgda6aeiloppomieachmpsttsqmidejosuvvuspkfflqtvwwvuqlgfkqtvwwvuqlgejnrstutrokfbfjmopppnkgc8cfikllkifc958adfggfdb8635689aa98653122333333221",1.2,0.625,0.375,1],["*","112233332211245688886542479bdeedb9747behjkkjgda7afjmoppolieaejnrtuutrnidglquvwwvtqlfgmruwxxwuqlfglqtvvvuspjeeinqrssrpmhcbfjlnoonliea7begijjifda6479bdeedb864345788886542123344443221011111111110",1.2,0.625,0.5,1],["*","00000000000000000000000012455444553115aefdcdff9438gmomlmonf77emsvtstvtmcdlquvutuvvqhktwwvtsuwxvmkvyxvttuwxvmfpuwwvuvxwrh9hpvwutuvumc4ahnpnmnonf715aefecefe93013554445531000000000000000000000000",1.375,0.571,0.464,1],["*","000000000000024677777642148cefffec8527cilnnnmid75cipsuuutpjc9gntwxxxwtngdkruwwwwwvqjemsvwwvwwwslelruvvvvwwrkbiosuvvvvuoh6djoqrrrrpkd38eikmlmlje9148bdeeeec95024677777652012222223221000000000000",1.143,0.636,0.455,1],["*","000000000000000010111000124565666421259cddeeda5249fjmmmmkg947ekqttttrme8cjpuxxxxvqkcgntxzzzyxuoghpuyzzzzyvphfntxzzzzxtneaiptwvwvtpia6cinppppnjc637cfgfggfc73135776676531000111111000000000000000",1.25,0.571,0.464,1],["*","0000000000000011111111101379aabdca6227chjjlmlhb54biorrstsng88fntwxxxwsldckrwyzzzyvphgouxzzzzzwskhouxzzzzywrjdkrwyzzzxuof8fnsvwwwuqjb4ahnpqqrpld626bfhhijie841357889aa742000111111100000000000000",1.25,0.571,0.464,1],["*","00000000000000000000000000355324552014aeeb9cee8339hnokjlone66fouvtrtvumcblswxwwwxxrheotxxxwxyxtkdmtwxxxxywsj8iqwyxxxxvoe4clsvvvvvrj927flnmmnnkc5138bccbcdb62002231133310000000000000000000000000",1.222,0.6,0.467,1],["*","00000000000001222111111013556555553126acccbcca7349fijjjjjgb67ekoqqqqpmg9cjquvvvwvsmeelsvwwwxwuogfmtwxxxxxvphfntxxxxxxvphbipuvvvwvsle7dkoqqqrrnha38dhjjjkjgb6258abbbcca74024455556532000000000000",1.143,0.636,0.455,1],["*","000000000000000000000000014798788852028eiihhiic514dmstrrsri95bkrwwvwwvoeaiqvxxwxxxsjdnuxxxwxyyvlbksxyxxxyyuk5cmtxyxxyxpf26fouvuuvtka029innlmomd5015adcbcdc72002454344420000000000000000000000000",1.222,0.643,0.5,1],["*","00000000000000000000000013799768995227ejjgfhiib53ajqsqpqrpg78gotwvuvvtlcdlrvwwvwwvqgeouwxwwwxwsjcmuxyxwxyxrh7gqwxwwwxvnc3ajrsrqstqh715dikhgjljb40169a769ba51002332123310000000000000000000000000",1.222,0.6,0.533,1],["*","00000000000000111111110001567545663114aefdbdfe9427gmomlmone65bksvutuvtkabjpuxwvwxvoffotwxwwwxwsifqwyxwwwyyvlaksxyxxyyxrg4cmuwvvwxvmc27goqonpsqg7039fhedfiha4014786579841001221122210000000000000",1.1,0.667,0.5,1],["*","000000000000011122222111135789999753159dfgghgea638ejmooonkf98elqtuuuurlfcjqtvwvwwupifntvvvvwwwrkgnuvvvvvwwrkdkruvvvvvupi9fmqsttutrle49fkmooonkf925adghhhgea6135799999753011122222111000000000000",1.333,0.6,0.45,1],["*","000000000000000000000000002465555642027cggefghb514ckqqopqqi95ajrwxwwxxpfbjpuxxwwxxtjhrwxwvtuwxxoiswxwustvxwockquwvuuwxtj5bjrwvuuwwoe14ckppnopph8017cgfeefga4002465455531000000000000000000000000",1.375,0.571,0.464,1],["*","00000000000001222222221013566666664237adccccdb846bgjkjjkkid79gmpqppqqoibdlruvuuvvtngelrvvvvvvuohelruvwwwvtohdkruwwwwvsmf8flprrrrqnhb5afjkllllhc736acdeeeeb84135566667642011111122211000000000000",1.143,0.636,0.455,1],["*","0000000000001223333332214578aaa986537acegggfdb85behjlmmljgd9eimoqqqpolgchmqtuvvuspjejosvwxxwurlfjotvwxxwurlfimrtuvuusojeejmpqqqpnkgbbfiklmlkifc87acegggfdb854679aaa98653122333333221000000000000",1.5,0.5,0.438,1],["*","000000000000000000000000012343344420026acbbddb5214ahkllmmha438fnstuutog87emswyyyxtmdclswyzzzywqhdnuxzzzzzwqhajrwyzzzyumd6dmtwwwwvqi828gmqppqpkc5149eggghgd72013565566421000000000000000000000000",1.375,0.571,0.464,1],["*","1112222221112345666654323579abba975358bdfhhgdb868cfilmmlifc8cgloqrrqokgbejortuvtrnidekptvwwvsojeekptvwwvsojddinrtuutqmhcbfknqrrpmjea7bfikmlkhea758adfggfca743568aaa98643233456554321111122221110",1.2,0.714,0.429,1],["*","00000000000000000000000013455455542138ceedeffb626cjmnmnonib4bjptvuvvuph9hotwyyyywsmejqvxzzzzxuofipuxzzzyxtmedlrwyzzyvqjb8fntwxxwtme64ahmooppnha426adfffgeb62124555555421000000000000000000000000",1.429,0.467,0.467,1],["*","00000000000000000000000012454455542127bddcefeb634bhlmmnomib57fmrutuvtog9bjqvxyyywsmedlrwyzzzxuogckrwyzzzxtnf9hpuxyyywrlc5dkquvwvtng839fkmnopnib5259cdefgeb63123444555421000000000000000000000000",1.429,0.467,0.467,1],["*","00000000000001122222211124688888975337befffgfd956bhlmmmnmje8bhorsssttqkdemsuvuuvvtoghouvvvvwwvqjiqwwwvvwwvqjgnuwwvvvwuogcjqttttttqkd7dimnnnnmje848cfggggfd95246888888752011222222110000000000000",1.333,0.6,0.45,1],["*","00000000000000000011100013555566652126acccded9514agkllmmjf838elqsstspkd6cjpuwxxwtpibgnswyzzywsmehouxzzzzxtnfemtxyyyywsldahosuttusng96cilmllmkgb537accbcdca63124443455321000000000000000000000000",1.25,0.571,0.464,1],["*","00000000000001112222211113579999975325adghhhgea549fknooookf98fmruvvvvrlecjquwxxxxvphelswxyyyywqjelswxyyyywqiahotwxxxwtnf6cjptvvvtqjc27dilnnnmid7148cefgffc84024678888642001112222110000000000000",1.333,0.6,0.45,1],["*","11112222111123445555443246789aa987537acefggfdb85aehjkllkifc8eimopqqpnkgbglpstuutrnidhmruvwwvsojdglqtvwwusoidfjnqsttrpmhccgjmnoonlie98begijjigda6579bdeedb964345678876542122344443321011111111110",1.2,0.556,0.444,1],["*","0000000000000011111111001479989aa84238eijijkjf946dlqsrssrmf7aiqvxxxywrkbemtxzzzzyuofiqvyzzzzywriipvyzzzzyvqhdlswyzzywsld8gnsvvwwtog84ahmppqqoib516bfhghihc72135787999731000111111100000000000000",1.25,0.571,0.464,1],["*","00000000000000111111110013676678763127beeefgeb625ahlmmnnlga48fmrttutrme8ekquxyyxvqjcipuxyzzyxtngjqvyzzzzyvpggouxzzzzxtmebjptuuuvtoha6dimnmnnmic637bddcdeda63024544455421000000000000000000000000",1.25,0.571,0.464,1],["*","0000000000001223344332213568abba865358bdghhgeb869cgjlmmljgd9cgloqrrqolgcfkpsuvvuspkfgmruwwwwurmggmruwwwwurmgfkpstuutspkfcgknpqqpnkgc9dgikllkifc958bdfggfdb8535689aa98643122333333211000000000000",1.5,0.5,0.438,1],["*","112222222111345567665432578abcba97647adfghhgeb85aehkmnmljgc8eimprssqokgbglpsuvvurnidgmruwxxvsoidglqtvwwvsnicfjortuuspmhccgknpqqomiea9cfiklljhea668aceffec974356799987643233455544321111122211110",1.2,0.625,0.5,1],["*","000000000000001111111110147abbcedb6227dikklnmib54bjpsssusog88gntwxxywsldckrwyzzzyvphfouxzzzzzxskfntxzzzzywrjbjqvyyyyxtne7elruvvvtoh939gloopqojc515aegfhigc72135777899631000111111100000000000000",1.25,0.571,0.464,1],["*","0000000000000011111111001369a9acc95226cgjjklkg943ahnqrrsrmf77emswwxxvrkcckrvyzzzyuphgouxzzzzyxskhpuxzzzzywrkdlrwyyyyxtnf8fnsvvvvtoha4ahmooppnib526begfghgc62135776788631000111111100000000000000",1.25,0.571,0.464,1],["*","00000000000001222222221013566556664237accbbcdb845bgkkjjkkid79gmqqqqqqoicdlsvwvvwwuogelswxwwxwvphelswxxxxxvphdlrwxxxxxtng9flqrssssoic5agklllmmjd836adeeeffc84135666677642012222222221000000000000",1.143,0.636,0.455,1],["*","000000000000000000000000002455445531017cgfdeffa414bkppnopph849iqwwvvwwoeahpuwwvwxxsjgqvwwutuwxwohqvwvtstvxwobjquvutuwwsj5bjrvvtuvvne14ckppnopog8017cgfeeff94002465555531000000000000000000000000",1.375,0.571,0.464,1],["*","000000000000000000000000002465455642027cggefgga514ckqqopqqh949irwxwwxwpe9hpuxxwxyxtjfpvxwvuvxyxogqvxwutuwyxobjquwvuvxxtj5bjrwvuvwwoe14ckppnopog8017cgfdeff94002455455531000000000000000000000000",1.375,0.571,0.464,1],["*","1112222221113445666654325789bbba97537adfghgfdb85aehkmmmlifc8eimprsrqokgbglqtuvvtrnicgmruwxxvsoidglquvwwurnicejnrsttsplgbcgkmoppnlie98cfhjkkigda668aceeedb964356788887542223344443321111111111110",1.2,0.625,0.5,1],["*","000000000000000000000000002455445531017cgfdeff9414ckppoopog84airwxwwxwodaipuxxwxyxsihrvxwvuvxywniswwwutuwxwnckquvuuvwwsi6bjrvvuuwvnd14ckppnnpog7016cgfeeff94002455455531000000000000000000000000",1.375,0.571,0.464,1],["*","000000000000011122222111035789999753159dfhhhgda538ejmooonke88elqtuuvurldcjquvwwwwuohgntvwwwwxwqjgouvwvvwwwqjdkruvvvvwuoh9fmqsttutqkd49fkmonnnje825adfggggd95035789999753011122222111000000000000",1.333,0.6,0.45,1],["2","38gmpqqqqnh96fpvwwwwxvqfakuwurqrvxujajqqmiintxvk7dihedhouxuj36889dlswwrg1235ajrwxtlc0138gpvxtme6138fntvtme7237fmsvtng8316dmtwvrke963ajrwxvqmigd8cmsvwurpoolebkqssrqqqrog8fkmnnnmnnle37bdeeeeeec8",0.733,1,0.467,0.75],["2","03jsrrrrsl614cpussrrssi4ipuqjijjpvrhovuh6666kusocmi60014luso1430017isvpg000008ktvrf400001huuuk500005eqwtj710006hrwsh600003hsuvi200009fpwth600000nsvwna555542qttsokjjjkjfqutuuuuuuuvojqqqqqqqqqqh",0.741,1,0.481,0.639],["2","16bccba951004iuvvuusk500fsyuqrvyvla2pxqe8afnxyn6iod2014evzq7463002anwwm600002anwvj8200019oxvn8100019nvvn910001aoxxm9100017oyxpb200009mwyqd533321gwzyuonmlki9dvyzzzzzzywj8otwyyxxxwwk27behhhgfed8",0.815,1,0.481,0.653],["2","023568887542358acdedca8548beghhihfc869dfhijllkgb69ceghjmnnid69bdegjnpoje4579cfimnlgb2358cgjmkid8247bgkllie9537bgknnlhc737bhmqqplgb749flqtsqnjea6bhosvtrolhd9agloqpnmkhd99dhjkkjihfb858bdeeeedb96",0.875,0.8,0.45,0.5],["2","026bfggeb73115ckpqpolg946dlrttssspjaaiprrporturgbjmmigimswvk7cec99elswuj255558gotupf01237emstph90127emstph93037emstph93138fnttph93109hotvskc6432fpuxwslfdcb8isxyxuronnleepvxxxwwwwsi8floooooonkc",0.733,1,0.467,0.625],["2","16adddddea616ejmkkklmjd5eoookjjkoolbhqnicbbelpqgdjfa447clprh586314bippod12124bkqtnh70015ckrsqh92026dlstph93016dmrtog83105emtspg82000akrurlc75554dnstqlgdddfbemrqqnmlllnhahlkkkkkkkng6adcccccccd9",0.8,1,0.467,0.7],["2","469bdffgfedb7adgijkkkjig9dhjlmmnnnmlaeikmnnopqqqadhjklmoqsst9cegijlnqsst69bdfhkmpqqq469behkmoonm358cfjmnnmji36aejmopnkgf69ejnqrqokge8dinrttsolhfbgmquvusqnjichnruvtsqnljbgloqrrqpnljaeikmnmmmkjh",0.75,1,0.438,0.667],["2","6chloonkfa52ciotvwvsnhb6fmqtuuvusoibfloooprtusmecgihilptvupg8bcdfkptvtnf479chotvvqkc36agntxwsle859fmtxyung957elswywqjc74aiqvyxuoga63emtyyxuoic74hqwyyxvrmhb6ksxyyyxvrmf9jqvwxyywtohaejnqrrsrplf8",0.714,0.824,0.5,0.84],["2","026aaaaa84004amrrqqrqg51isvusssuwuncozuicbcekwylgpj60013dtyn3641003dowxk000003cqxvk900014dqxvm710007hqxxm820015jvyvoc10004ivywm931005htzwna20000cuyytkc87885dvyxwutpoqrlcuyyyyywwyys6hlmmmljjlkg",0.808,1,0.481,0.629],["2","25bgjkkid8425cjqtuurnha5ahosuuvvtoh9ahmnnoqtvtmd8dfffimswvnd4689bgnturkb1247ckrtrle70149hpurld73138fnssme73137emstpg83107dlrtrme7200ckqttqmga521fotvusqnic63ensuuuusoha4aioqsssqnha45adghhhgea62",0.667,1,0.467,0.65],["2","7chloppomhc7dkpuwwwwuqlfhpuwwvvwxvrnhossrqruwxvsdillkloswywu7bdefintwxvs357aekqvxvro136bhouxvrlj149gntwvrlgf39fntvvrmhcd7emsvvtokgdeckrwxvspmjhhhpvyywusrpnlkswzyyxwwurokrvxxyyyxvrnejnqqrrrqokg",0.714,1,0.464,0.8],["2","5aeiklmlie849ejlmnoqpmg9afhhgilpssmd9ccbbejpuvpf68779elsvvof3457cjqvvtlc136cjqvwupha25biqvxvpjc75biqvywrkd74bipvxyunf842hpuyzyung952ltxzzyvqke95muyzzyxuqkd7krvwxxxvsnf8flpqrssqojd68cfghihgeb73",0.714,0.778,0.528,0.8],["2","16fllllljb207iswwwwwvl93htwtqpqrvtlanytjcbbeowtgflg7113anwtf464103cntvmb00003cqyxob40014cnwwpc21004dpvwod30104eqywob40015fpwwob20001frwxqe522211nxxwpheeeeb6nwvusrqqqrnckttttttttuqdcjjjjjjjjjg7",0.714,1,0.476,0.643],["2","7acefggfdb86adgjkkkkifc8dgkmnoonmkgbehlnopqqpniddgjlnoqrrpkebehjloqrroje8behknpqpmhc7adgkmoonjea6aeilnomjfb78chlnpomhd95bglprrpmhc85ejpstsqmida6hmsvutrokgc8hnsuutrolheagkprrqqolieadhlmnnmljgd9",0.75,1,0.438,0.556],["2","01677777620007osrrrsq9008ksrqqqqvm91httmjjjktto9fuqa4459pste7hd3005itssd000009lssof500005mwutd100003jttri400008nstoc300016jttse200008msvsj966652apswwsqqqqpe5lrrrrrrrrtp3jsrrrrrrrrk169999999995",0.852,1,0.481,0.675],["2","39dghgggfda69hnrrrrqpnjeepvwvutuutrnhswurooqsuvtfoqnighmruwu9fgdaafmruup46778elsvupi0027emswvpg9038gntwvph834ahpuwuph931ajqvxvrkc732fpvxxvrlgdb9jswxxwtqnmlijswwwwwvutsognqqqrrrrrqmafggggggggfd",0.786,1,0.464,0.733],["2","026bgjkkjgb826dlqtuutqlg5ckruvvwwwto5dlpqppruxxt4afiiijntxxu147abdhntvuq01358djqtsnj0025ahnrqmfb014agmqple8624ahorqle8435bhossohb744bipuusnieb87fouxwuromlhehpvxwvuttsoiekprsssssrni8bfghhhhhgeb",0.733,1,0.467,0.667],["2","4ahmonnnlg948hquvuuvuqg8dmuwvttvwvmbdmsrolmrvwodahljgfjpvxod69b99cjqvvmc23448gpuvri80126enuvrkb5026dmtvrjb5226dlsvskb4106dlsvumd6210clswuqic8653gpvwuqlihhd7hqwxvtrrrqkbfovxxxwwxwnd9gmnnnnnnlg8",0.667,0.789,0.526,0.75],["2","8fkopoppole7fntwwwwwwtmdjswvtrsvxwrhhprolknswxtichifddkrvxsi69989elsvvpf1248emsvvrjb137emtwvqjb527entxvpia527emswvqia410emtwwunga753jrwyxuojgfc8muyzywtrpplelswxxwwvvvqhhnrsssssssogafhihhihiifa",0.714,0.778,0.528,0.72],["2","01bmooooog4016kvuuuutqc3couwuuuuvvqihwyoddddnwur8jla0013jwuq0220005isxwm000006htxti700014ivxtj500005jtxui510006htyrf500003iuwvh300009ltxvj500000kwxwricccbb8mvtutttttstnkusssttttstp8hkkkkkkkkjc",0.75,1,0.482,0.614],["2","48cfhiigd9539ejmooomkgc8djprrrqqpmifflqpomnprrpmdhkjiikostrp9cdcdfjossqo4567aflpqolj246aflpqoife25aflqrojd9a5agnrsqkd757bhostrmf9447gntwurlfa77akrxyvrnjfedeltyywurpnligiputtrqpomjgdimmmmmmmkgd",0.727,1,0.455,0.55],["2","39fiiiiif930ajprqrqspka3gprpmllprrj9ltohccbiouqgeke8336fovtj8a7325ckrtpf00005dnstoh80003cnuvpg72015bkrtqh92004blstoh83004clssof71000blrvtogb9985fpuutplkkkjdfpvwwvvvvvulcluuvvvvvvvl7ellkkkkkkke",0.75,1,0.469,0.72],["2","3couuttsrla5dpxxxwxxyvnfpxvokjklpwxppxpa5679huzrbgb2027enwyp111003dpwxrg000019mwzsf401249kwyth50015eovyth51004eqyysh61002cpxyui61000bnwzuj820000nxzxqf965453qyzxuromllleqyzzzzyxxxxniqrrrrrrrrqi",0.731,1,0.481,0.714],["2","027aaaaa940029nsttttrf30cnvurrstwrg7kyvha9bdnyvhdpk60014jyxj3751003dqyuh000005grxsg700003etyth410003eqxth400004gtytg500001btywl820003coyxnb533218qyzwrljjkhb8rzzzzyyyyxq5luvwvvvvwvo16bcddcbcdc8",0.815,1,0.481,0.653],["2","58behihfd9637cgjlmmkie95afjnpqqpmid89eilnpqqokf99dfikmpqqmga69cehknpokf9469cgjnnmic7248chkmlje9536afjlljfa636afkmmkga7319ekopokgb742cjotsqmida74djosrpmjfc85djnrpomkgd96aeilllkigd957adggggfdb85",0.667,0.9,0.5,0.583],["2","38eknoonlg947entwxxxvph89iquvvvxxumb9hnooosvywod7dgghkqvxwnd479belswxula236ahqwxvpg7126enuxwrja414ajrvvrld6238gottrmga525clrtrokfa628gpttrpmkfa49iquuttsqme78gosuvvvtog85bhloqrqokd6258bdfgfeb73",0.667,0.882,0.529,0.85],["2","01799999950017mqppppri20hmssrrrrusj7suuibbbdmtrfknm70015hsqg576101bnrtpe000018nvvpb400028mturf10000dquurf30003dpvvpb30003bruuob10000crvtse311111etsuqkhhghhcerqstttsssvpbonnooonnnqk38aaaaaaaaa7",0.815,1,0.481,0.694],["2","15hqsrqqqmb43cqyzzyyzwl99nvsnlknsxuiaoqg7437iuxn3ab51005huwm0110002eswpe000002apyuf4000019oxwm700002bnvvm920015eqxrf720004gtxvh300005eqyvk710000dsxwqg977653fvzxurpopomeetyzyyxyzywl8imnnmlnoold",0.704,1,0.481,0.594],["2","247adfhhgda846bfikllkigd59ejlnoponlk6aeikmnoqppo6adgijlnqrss479cegjmoppp3479cfilnmmm1358cgklmjhi247bfjlljfce47chknnkgb7a7bhmpqplhc8c9flrturnjfcfaflqssqnkheg9fkpqqomligg7bfjkllkjhfe57adfggggecb",0.667,1,0.444,0.5],["2","028ehiiihc6239iptutusnf78hquusrstsnecntrmihimrrj9gjgb78cjqsl4886238fnrph000028hquskb00138hquskb40039iquskb41028irvtlb4104aiquskb40009irvtlc62111eovvsmgdddb7hottrolllmkefkpqqqrrrrpi9dggffggggfb",0.688,1,0.469,0.633],["2","14dikmonj9104dqxxyzzxl62fqwvutssutmblxulgeddlvwjckg85336iwxk2321017jtxug000016ivzth800014iuyvj520017hsyvi611027iuxri610017jtytg510006htzvi721000gtyysf888531lyzywroponj8kxyzzzzzzzvfeoqrsstsrqnb",0.741,1,0.481,0.611],["2","25aegggfb7315cjorrrqmga4bkswyyyxvph9dmtvvvwxyvnebinooquxyxpf6befhmtxyvnd2479fnuxwri9025bjrxwsld6149iqvxtme8338gpvxuoh9426envxwsle842ajtxywtnic74dnvyyxvspkd6dnvyyyyxuph8bkrtuvvusnf76cgjjkkjhe94",0.667,0.833,0.5,0.85],["2","048bcccb84002ahmmmmmib317iopnnnpoj94cnpkfdejoqg8bkjc647fntkc6ba525aiori912113bkqrmc500029jrsmd40004aioqme61002ajqrlc510038jqtne622118gptuohdcc95bktuurooookcaktvvvvvvvrg6fnppppppqmd38ceeeeeeeb6",0.813,1,0.469,0.633],["2","58dfhihhhgc98eilmmmmnmidbglnmllnqroibfijigimquqk9cedccfkqurk567789flqsoi23469ekoqpkd0248ekpqplf9148ekqsple9459ekpsrnha62aflqturle953elrvwvrmieb8ipvxxwtpnlhcjrwxwvtsqqlgflqrrrqqqplfafijkkkkkjgc",0.8,0.714,0.536,0.6],["2","07efffffc3002iwvvvvwt900eosonoopula2ntqgdddhsroaouj4223arrsdbf70018ktsqb00003dnssmb300018qvvsb100007ksspf30001dotsm9200016nuuqc10000dksuqg643431osvyuommmmk9iqrttttttttkdttttttttuul6giiiiiiiig8",0.815,1,0.481,0.694],["2","6bhmoppomhb6bjqvxxxxvrjbfntwwwwxxvoefnrrqrtvxxrgcikkkmruxxrh8bdeglrvxwpf468bhouxxtlc236cksxxuof7149hpvxupha437emsvupjc625ckqtspkf952aipssqnjfb73emsutqomkgb6fouvutsrqmg9emrtuuvvtpia9glnopqqplf8",0.714,1,0.464,0.84],["2","15agkmmlje835ckruvvusohablswwussttpjcmrspljkotur9gjjfdehntvt489878djptso12335bjqtrmf0025bjqusld7026dlrusld6227fntvtmd6117fouxvpg7312dnuyxsle9765hsxywtokhhgditxyxvtsrrpkgqwxxxxxxwtlahmnnnnnnmjd",0.733,1,0.467,0.75],["2","49ejmopnkf958ekorstsqlf9bhlopqrttqkcbgijjlortsme9cddeimrtrld578adjpsrnh9246agnttpib5148elswsld6226ckrvvpg8314aipuvrkc510ahotvuph9410gntwwupjd742kswxxvsoje95ltxyxxwtpjd7iptvvwwuqle7bhlnoppnkf95",0.714,1,0.464,0.72],["2","259ehiihea526cjosttspjc7aiptvuuvuqjdcjpqqooruuoj9fjjiikptupk59bdehlqtsmi247bflqtsnge137dkquuphbb14aiquvrjc8938gouvsmf9797entvtojea8acltwvsokiebbgqwxwtrqpmhegpvxwwvvvrlfdlrtvvvvvrld7cgjlmmmlid8",0.667,1,0.467,0.8],["2","bgknoooomkfafkoqqpqrrpkehnqqpopsuuoiejlkjkmruvqjbeffehlquupi689acglrttng357bfkpsspic249ekprspkd859ekqsrpjd849ekptsple952ekquvsnhb632iouwwsojfb86lrwyxtqmjhd9mtxyxvtrqnidjotutsrrqojdejmooooonmhc",0.7,1,0.45,0.667],["/","00000004bgb300000017irj60000003bovm70000016iuui5000003cpxqc2000017jtui6000013covpc200004blsth600001akstm9200015grwqf300002anuvm9000017itwrh500003dqvumb200005ivwrh6100005ivumb2000003clkd6100000",0.579,1,0.474,0.694],["/","0000138dhgd8000026chljf8000048glokf700016cjmnic50024aglmlf930147eknmib51037cinnkf84015agmpmib62028elopke73104bhopnha42007ekqokd72100ahmqmg941000cimpjd620000cilmg9410000aeggb62000007abb74100000",0.6,1,0.45,0.556],["/","0000013aiia20000027hqpf3000015eouqf3000039ktula200015eqvrg5100018kuvnb300003cpxti7100016htwpe410003bnusi9200016hrtmb410014blsoe5200018hpqh8200003dmqmb3000004iqof61000004ioj920000003cfb40000000",0.556,1,0.472,0.68],["/","00000014afd60000014aimh80000139ipqi8000027gpupf500003alttla300015eouqg6100017hqtmc400002akrpg7200014dmpkb4100027gnme6200015cknh93100139inld5100038gmnh8200006enplc5100008iqoh82000007ekib4100000",0.647,1,0.471,0.556],["/","0000026aedb70000149ejhe9000026djolga00015ahlokf700127dknoic50014agmomf930026djonjc610149gmolg940026djonjd62015ahmomg941037dloojd62005bioomga41008flpnjc62100bimplf840000bgjlga5200009dfgb6310000",0.6,1,0.45,0.778],["/","00000027gmh80000002bnwob0000004eqypc0000017isvl9000003cnupe5000028iqrh7100004cnrla2000028jrpe4000014dosk92000017jsrg5100003couoc3000016hsul8100014cnuqf500003aksrj9200004frtmb4100004dnme5100000",0.611,1,0.472,0.533],["/","00000017ipi50000004eqwn70000018kvvl6000004eqysf4000018kuxm9100003eqxtg5000019kuwoa200005grwtg500001bnvtl9200015hsvnb200003bovsh5000018kuvnb200004erwsi7100005htumc3000003dmle610000015aa61000000",0.579,1,0.474,0.694],["/","00000029hkd40000003dpuk60000015gtwl60000029lush5000004dptk92000018jrnb3000015eoqg6100003bmrma2000017irqg5100003cpuna2000016ituj7100002anvrf4000017jstk9200003cptnc4100003bnog610000016dd82000000",0.579,1,0.474,0.556],["/","00000028figa0000015dmplc0000139ipqka000015enrog7000139jrrlc300015dnspg700025ckssmd50004ahqtph920028fntrkc50004clsvof820017gptri930004dmtuof620008hpurja30000ajstnf610000bjrqja3100008fkic5100000",0.615,1,0.462,0.65],["/","00000006fmf50000002bown70000016itwm7000003coxth5000017itypb200002bowui5000006itxpc200001bnwui6000004gswob3000019lvth4000014frwob200013bmuui500003bltuob200004gsvqg6100004eooi920000026cc83100000",0.579,1,0.474,0.694],["/","0000126dkle50000149jqri7000026eouqh6000039ksumc400016fpuqg720003blttla300027grwrg610014cmuumb300027hrwrg720014cmvvmb310027hrwrh610003bmuvnc410006gqvsi8200008ktund5100009mspg72000007gkg83100000",0.588,1,0.471,0.667],["/","00000015cgb30000125clph6000025bkssj7000028hrvqf500003blttla300015epupf5100017isska300004cnrne6100027iqph8300025dnrka310015akqoe510003aiqrk9200006gquqg5100008lvvnc3000008jtqh72000005chga3100000",0.611,1,0.472,0.533],["/","00000014aea300000029joh60000027gqtj7000015dnurf5000039jtvma200015epwti6000028kuxrf500004eqwvnc310139ktune621258fptoe620037dlsrh7100039hqsnb300004blsri7100004epsnd4100005eqqi72000003bkib3100000",0.611,1,0.472,0.7],["/","00000028fhd60000016fopj9000003aksqi8000027gptof600014bltrka300016fpuof610003akutlb300015eoupf7100029jstlb400015dntpf610013ajrska310027fospf610005clrrja200006enrmd5100005cjke720000037bb72000000",0.571,1,0.464,0.52],["/","00000005dlh800000029lwpc0000015grxoa000002amwuj7000016grxqd300002amvvk8000005grxre300002alvvl8000004frwqe400002aluuk8100015grwpe300026eovvk810005fpuvqe400008lwwsj8100009lwtmb3000006fnle6100000",0.611,1,0.472,0.667],["/","00000029gg920000015gpoe3000003bmtpd3000016hrula200003bnusg6100016hsunb300003covrh7100017itvnb300003coxsh7100016htwoc410003bnwtj7200017iswpd310003doutj8100004irtnd4000004hpof71000003chg93000000",0.556,1,0.472,0.72],["/","00000158bb740000138ehgb5000025cjmjd6000149hmojc500026dknnh9300039gnnkd620015cjpmh9300028fmpke620014binnia410027flole720015bjnnha410039fmnkd720005cjnlg9400006dilic6200006bfgd831000048aa74100000",0.545,1,0.455,0.667],["/","00000028eiga0000015dmplc0000039iprlb000015dnrph8000139jrsmd400015dnsph8100039irtne500015dmtqi9200039hqtme610016dmtqi9300029ipsld510038gosri930007dmsrmd51000airtph820000bjrrkc5100008fkjd6100000",0.615,1,0.462,0.5],["/","00000029gie60000016fopj9000003akrph7000016fprmd400013alsqi8200027gptmc400026dnurj920003ajstmd510016gpwri820003akstlb410016fotpg620003akrtkb300005entpg6100006forkb3100005djkd610000037bb72000000",0.571,1,0.464,0.6],["/","00000005aca40000002aikg70000015eopj80000029jqph7000015eormd400003akrph8200026forlc400026cmsph720004airqkb400028hqvof610015cmttka300029iqupf610005dnttkb310007gpupf6100008hpskb3100005chic6100000",0.571,1,0.464,0.6],["/","0000138cgfc8000025bhljf9000037flqnha00015aimqlf800127dknoic50014agmmle830147ejmlhb51036cimmjd73015aglnkf941028eknnic62005bioomf831008flpnib61000ahmplf830000cimoic520000bgjje83100009dee95100000",0.6,1,0.45,0.556],["/","00000006fmf50000001anwm70000004erwm70000018kwvj5000004eqyre3000018kuuj7100004dqwpc2000007jtui6000001bouob3000005gssh4000002amuob1000026hsuj6000029hpupc200004frurh6100003eqsk920000017gib3000000",0.579,1,0.474,0.639],["/","00000005fld40000002aovl60000005gtxm7000002anyvj5000015gszrd300001anwvj6000005gsxpc200002bnvui6000006ituna300002cpvpd3000017jtuj6000004eqwre300003bnvvl8100005huxre4000005ivvk81000003blkb3000000",0.579,1,0.474,0.694],["/","00000029ile40000003dpuk60000016htwl6000003amvsh5000016grvma200003bmtpd4000016gqsj7100002amtpd3000014fqtk71000028lurf4000003dqvob2000017jtuj7100017gqtoc300003couqg6100003cori820000027fga3100000",0.579,1,0.474,0.583],["/","00000017egd60000005enpj90000029jsrk9000014dntqh7000028irslc400014cmsog7100028iqrka300027fosne610004cktqi9300029iqtlc410015dntrh7200029jrtmc310005dntrh8100007gptmd4100007goph81000005bgga3000000",0.571,1,0.464,0.52],["/","00000017egd60000004dmpj90000018irrj9000014cntpg7000027hqslc400014cmspg7200027hqrka300003blsof6100016fpska300003akrpf6100016enrlb300025clqpg610004ajqqka300006enrne6100006emoi920000039efa4000000",0.571,1,0.464,0.48],["/","00000004bie600000018jtna0000014epxob0000028kuvk8000015epwrf3000029ktvl9100015fqwrf400005dmuvm9100019kstpe400014gquqh720002alttla200016gquqg510003coutlb200007juvqg6100009mwtla3000007hqmd5100000",0.611,1,0.472,0.733],["/","00000027ekg90000014clpkb0000028hpqka000014cmrof7000028iqrkb400015dntpg7200029jstmc400015eotqh820013akssmc510127fptpg831015clsskb520038hqtpf721004clsrka310006forne6100006goog82000005cig93100000",0.647,1,0.471,0.639],["/","00000005cic400000019ltk60000015frwl60000029mwuh5000015grxob200001amuth5000026hswob200005fputh600001amvuma200004grvpe300002amvuj7000005gsvqe300002bnvtk8100004gtwpe4000004fqqi820000028gf93000000",0.579,1,0.474,0.694],["/","00000016ejd50000003cnsj80000027istj7000004covqe4000017isvma200003cnvsh6100016hsunc300002anusi7100015grund500002amusi8300016hrund510015dnurh831003alstmb310004equpf6100005eqpi820000039hga4100000",0.611,1,0.472,0.633],["/","00000015chd50000013alqj80000038irsi7000015eotod4000029kstj8200004epupe4000018jstla200004dpuqg7100017jsska400026eosmd520026clrpf620003akstla300004epvrg6100005gsumb3000004fppg610000039gf93000000",0.611,1,0.472,0.6],["/","0000003bjjb20000027hppf3000013bmtqf3000016hrunc300003amusj9200016hrtnd610014couqh8300029kttla310015fqvpf6200029kuulb410015epvrh820002aktumc510003gqvri8310004jstmd5200004ipog83100003bgf94100000",0.556,1,0.472,0.64],["/","0000137cgfd8000025bglkga000037ekpnia00015ahmplf800127dknoic50013agmnlf930026cjnmib610038flnkf830015cimmib510138fknkf831016bimmic52004agmmkf931007djnlhb610009gloje7300009eijfa5200008ceea6210000",0.6,1,0.45,0.556],["/","00000014be930000126ckog5000026dlsrh600003ajsvqe400014cnuul9200015gqvqg6100029ktula300015fptpf6100029ksrj9300026fptmc510014blsqh8310039jrtmc520006gqvri8310008kvvoe6200007jsri93100004bhga4100000",0.611,1,0.472,0.633],["/","0000139eihe8000025chmkf9000038fkplg900015bimojd600128ekmmfa40024bhllic610148fkljf841037dimlhb62015ahlmjd731038ekmlga42005cionkd721008fkolg941000ahlojd620000cilmga410000afhhc72000008bcc84100000",0.6,1,0.45,0.444],["/","00000029gie60000016fopj8000003akrph7000016fpsnd400013altri9200016fptnd500003aktsj9300016eoune510003aktsj9200016fotnd510026dmssi820004bjrtnd410007fouqi8200007gpslc4100005cijd610000037ab73000000",0.571,1,0.464,0.48],["/","00000015be930000125ckng6000126cksrh6000139irvqf500004bmuula300015fquqg6100018jstlb300003cnsof6100016hppha410013blqkb5200138ipof7310027forlb421004dnsph7210006hstmc5200006hrph83100004agf94210000",0.611,1,0.472,0.533],["/","0000139eihe9000026cimkg9000048glpmg900016cjnpjd600139fmnnha40025cinnkd710149glomha51037djnojd73015ahlolg941028eknnic62105bioole831008fkomha51000ahloje730000cilmga410000aehhc72100008bcb84100000",0.6,1,0.45,0.556],["/","00000029hje70000017gpqj9000003blsqi8000027gqtof600014bltrja300027gqtoe510003bluska300027gquof610014cmusja300029irtmd510015dntqh7200039jqslb310005dnsqg7100006forkb3100006dkle610000038cc73000000",0.571,1,0.464,0.56],["/","00000004djc400000018ltk60000003cpwm70000017juvj6000003dqyre3000018juxl8100013dpwse300004bluvk8100008jtuoc300014fqwrg4100029luvl9000017iswsh500003dqwvnb200005ivxrg6100005jvvma2000003dlkd5100000",0.579,1,0.474,0.75],["8","17fmpqqqqnha6fovxxwwxwrjblswvrppsvvqgrvvqkfflswujtvuqkffkrwwjtwvspmmpuxwgqvxwvttvxyweovxxwvvwxyveovxvsqqsvxvgrvwtpllotwwjtwvsokjnswwisvwtqmmptwvdntvvtqqsutp7fnstsrrssoh27eknnnnnke8025aceeeda63",0.733,1,0.467,0.875],["8","000000000000123444321123368abb9755798cgiiihfccdgdjmnlmmlkkklgnqpmnoqqqpnipsqmoqsttrmipsqmoqstuqjipsqnoqsttqjipsqoprsttrlipsropqrssrnfmqqooooooppbhkmllkighjl6adggfeb9abe246888653457000000000000",1.125,1,0.438,0.75],["8","19msssrrof53amwzzzzzysjboxwrqqqrvywjszqd8aacnyzltzo82224iwzltzpa4324hwzltzumjihiqyzmnwyxxxxxyyxknwyxvvvvxyxjtztkfedenxyktzo82111fwyjtzo71001fwyktzsga989lxzmpxxusrrrvxwkdqxyyzyyxpha4dmooooolc32",0.769,1,0.481,0.635],["8","028dghhhgc6139ipssssrnf78hquutssutnedntrnjijmrrkenrnf968enrlenqlc524bmrldotpkfdfkqsldouurpoprvtjfovvtrqrtwtjgotrlhfhlrskinrme747dnrlhnqlc424blrlhntqkfdfkqslcjrsqnmnqspg6dlqssssspi914aegggghe82",0.688,1,0.469,0.533],["8","159dddddda517flopppople8epuxxxxxxuohkuwvsqoptwvqlvvsmhdhovwslvvrkeafnvwrlwxvrnlotxwrkvyxxwwwxzvqkvxwutstvywrkuvtokgkqwwrlvvrlgcgnuwrlvwuqmkmrvuqfrwxwvvvwupj8ipuuuuttoha28eiiiiiid82024766666420",0.857,1,0.464,0.76],["8","011111100011269cca6301587ejlmkf956cifotuuspjeflslutqoprqnoruowtomosutttsowtpnptutstpnwvtrsuurrsnnwvsqruurrsnovsmjmrtsstopvqjgjquuttqnvsmkmqsqqstjstsrqpmijotbimnnlid9afk48bccb84226a111111100011",1,1,0.455,0.792],["8","16ejjjjjh9207iruuuuutk93gsvtqpprutkamwskccceovtgmuoc1114iusgmuod3226jusgmwslfeehpwsfkwwurrrsvwpckwwusrrsvwpcmwtmfffhpwsfmvod2225itsgmvod2225itsgmvrleeegousghsusqqqrttmb8iqsrrrssla417dhhhhhga20",0.714,1,0.476,0.619],["8","6agknopomjfbbipuwxxxwtojfntwvvvwxwtojquuroorvwvrksusokkotwwsksvtollptwwtjrvvtqrtwxwshpvyxxxyyywsiqwyyyyyzywtkrwxxwwxyyxumtwwuttvwyxvnuxwussuwyxukrvwuttvwxvsfmsvvvvwwvrm8flqtuvvtqkf37dimnonlhc7",0.714,1,0.464,1],["8","02fqsrrrrnc35cqyzzzyzxoagswurrqqswxjlyxmbbaafszokxwi43328ozqjxwj6333apztmyyrkihhmuztlxzyxxwwxyxpkxzywvuuwyyplzypgedditztjywh31118oztjxwi31118oztjxynca99gsztgtxwtsrsuxxn6epxyyyyyvla02cmoonnoj81",0.769,0.963,0.5,0.603],["8","05fkkkkkjd302fuutuuuvrb2frwwvuuuwvpfnvuogfffluxonure2000arwonure2000aswonvtkb999htxolwwtqqqqtwvkjvyxwwwwxxtgmwwrlkkkpwwmnvsg5333cswonvre20009rwnnvrh6445drvnmvurmmmmpuvmbowvvvvvwvmb1coqppppqm81",0.704,0.964,0.464,0.5],["8","0000000000002467775213576dikkjf97bgkdnrqprpjgkqrjtrmlqurpruqmvoignuutusjmvqmkpvuuupfmwusrtxuttpemwvsqtwuuupfnwtqorvuuurimvurqsvsrstphrttstsmjmssaimonnjd9djn38bddd95259c023444210123000000000000",1.091,1,0.455,0.95],["8","15bhlnnmkf935clrvwvvtpibblswwvutuuqkgqwwtpmmqtvsitwvrmjjntwwitwvrnjkotwwgqwxurppsvvtepwyxvttvwvrfpwxwtrruwvrgrwwsnkkptvtitwuohdekrwwitwtngcdjqvvhswvrmjkosusdnuwvtssuuqk7gouwxxxvqjb27ejmnnnkf93",0.733,1,0.467,0.875],["8","25afhiiheb755cjpsttspkfbaiqvxwvutrnjenvxwtrqstsogqxxuqnnqtushrxyvsporuvtgpwyxvttuvurfpvyyxxwxwuqfpvyywvvvvtqgpwxvsqprutrgqwwtpllosureovwtolknrsqbltvuspopqpm7fotvvusqokf49hnrsrpmic8149dghhfd953",0.733,1,0.467,0.958],["8","017dhhhhfa4026gottttrka37gqvxxxxxtmbdovtpllnsvuihsxpg99dmuynhsxl9005hrymhsyphaaenuxmfqytplloswvjeqyxvtuvxyvkfrxtojjmrwwkitxpg99dmuymiuxla006isymitxqibbgnuymdovsoklnsvti7fptvvvvvrla26dikjjjjf93",0.75,1,0.469,0.64],["8","01dnoooond2027mvuuuuuo92hpuwuuuuwvpeqvxndcdepwvmqvwg0001ivvnqvwg0002jvvnpwxndddfpxwmitwvttttwxtfhtwwuuuuwxtgpwxoeddepxwnquwg0002jvunquwg0002jvunqvwmcccdowvnirvvttttvwsg4couttsttqd302bjkkkkjc30",0.75,1,0.482,0.629],["8","259eilmmlid85agmprstsqle8gnqrrrsturlbkrsqnmnruvqcmstqmkmqvwscmtvspopswwtcmtxwvuvwxxtcmtyzzzzzzxudnuxxwvvxyyveouvtqpqtwyvfpuurnlnrvxvdnstronosvwsaiorsrrsuuto6bimprsssqmh25aeilmmlie901479bccb963",0.786,1,0.464,0.867],["8","6aglopqpmid8binrsttttpkegnrsqppqttpkjqtrokknrusolsusokknsvuqlsvurooquwurlswxwvvwxxvrltxzzzzzzyvsltwxvuuvxywtmtvtqonquwwtmsurnkjnrvvtlrtrnllosvusiorrqpprtusocjnqssstsqmi7chlnoppnkfb259cefffeb74",0.714,1,0.464,0.84],["8","17lsssssqi619lvyxwwxxtk9ixxqjhijnuwklyvg4223bsymmzve10009rynmzvg4222aryomzxqjgghmvyohuyyxvvwxwsjiwywusstuwulmzwlcaabhtzpmysc10009rzpmyrb10009rzplyuiba99gtzpfquutssruvsj4bowxxxxwqe702billlkjd40",0.769,0.963,0.5,0.635],["8","17ejkkkkjd715fotuttttof6bnuvtrqrutodgrvqkffhntuihsvlb557hrwkhsvlc558isvkhsxqkggiovuigsyvsppruxthgsyvrpoqtxtihswpjeegnuujhsvkb447hrvkhsvlc668isvkfqvqkggiotthalstrppqtsnc5dkooooople515aeeeeeeb61",0.8,1,0.467,0.75],["8","05hllllllh504fttrrrsutf5gquurqqqsuqiktrlbaaafpunkspf10007mtnkspg10007mtnltrlcbbbgpunhsurpppprutihtvtrrrrsvthkusnfdeeirunkspg10008mtnkspf10007mtnksqj7666cotnissqmmmmossk7jttrrrrtuk808jlllllmk81",0.741,1,0.481,0.625],["8","00000000000024688875445759dgggebaacf9gkmmmljiikmfmqqpppqqqrqhptrpprtvvtpiqtspqsvwxtniqttqrtvwwtliquussuvwxtliquusstvwwtnhpttrrsttuspemqrrqqpoooo9fjlllkhgfhj48bdeeca889c135666542235000000000000",1.125,1,0.438,0.917],["8","02ckmmmmld404amuwwwvvod4dotuqppqtupdkxvndbbdnvxkkwth2102htwkkwth4224itwkjwvogeegovxkgtwusrrsvxuhgtwvsrrrvxuhjwvogeegovxkkwth3223htwkkwsh4224hsvkkwuofeefouwkequurqqruvrf6dnttttttof603bijjjjic40",0.714,1,0.476,0.571],["8","59fjmnonlhd9ahotvwxwvrmhfntwwvvwwvrnjrvvsqpsvwvrmtvuqmmptxwuntwurnnquxxvmtwwussuwyxvkrwyyyyyzyxukrwyxxxyyywukrvwuttvwxwtlsvtqooquwwtlsusollosvvsipsrpnnqtutpdkprrqrstsok7djorsstsoid37chlmnnlhb7",0.714,1,0.464,1],["8","0000000000002577776422468ehjjjhd98bgfnqqpqqnihkplttqnpstqprtnvrlilrvuuurnvrmjlrvuutpowvsrsvwuttoowvsrsvwuttonvsnkmrvuutpnvrmjmruuuuslutrpqtsqprufnqqqqpmihkp8ehiiigd98bg256777642246000000000000",1.1,1,0.45,0.833],["8","00000000000013567643124547befeb8579d8eilmlifcehkdlprrpomkmophossqqrrrsrpiqtsqrstuvsniqttrrstuvrliqtsqrstuvrliqsqnoqtvvsmiprpmnpruusohnqommnpqrqpchkkjjjiijkl7befffdbaacf356888644457000000000000",1.125,1,0.438,0.833],["8","17elpqqqqoic6eouxxwwxwslblswurppsvvsgquupjfflrvvjtvtojeekrwwjtwusollptwwgqvwwuttuwxweovxxwvvvwxweouwvtqqsvxwgqvvtpnmptwwjtwvtqnmptwwirvvusqqsuwvdmsvvuttuvuq7fmsttttttpj27dknoooolg9025adfffec73",0.733,1,0.467,0.917],["8","06ejjjjjh9106hqtttttsk83grutqpprtskamvsleddfnusgmtod2114gsrgmtoe3335hsrgmvrleeegnusfkvvsppqqtvpckvvspppquvpcmvsleddfnurfltod2114hsrfltod2224gsrflurldddfmtrfgrtrooopssla7iprqrrrrla417ehhhhhg910",0.714,1,0.476,0.595],["8","0000000000002467774213677djkjje96bhkenrqqroiflrrktsnlqtqoruqmvqjhnutttsjnwrnlqwuttpfmwusqtxuttpemwurpswuttpenwsolqvuttrhmwtpmqusqssnhrsqprqlimrqaimmmmic9djm48bccc84259c023443210123000000000000",1.091,1,0.455,0.95],["8","000000000000123444431123368abba866798cgijjifddegcjmnmmnmllllhnqpnoprrrqnjqsqnortuusmjqsqnortvvrkipsqnortuurkiqsropruvvsmipsroprsttsofmqqopppppppbgklllkjhhjl6adfffdb9abe246777653456000000000000",1.125,1,0.438,0.833],["8","00000000000024678875445659cfggecaabe9fjlllljiijlelppnopqqqqqhosqoprtvvtpiptropsvxxtmiptsqqtvwxskiquustuwxxtliquuttuwwwtnhptutttutuspelqsssrqooop9ejmmmligghk48bdeeda889c134666543335000000000000",1.125,1,0.438,1],["8","048cdeddea616ekoppppplf9douxxxxxxvpikuwvsqoqtwvrlvvsmheipvxslvvrkfbgovxskwxvromptxwrkvzyxwwwxzwrkvxwutrtvxwrkuvtnjgkqvxslvvrlgdhouwslvwuqnknrvvrfqvxxwwwxvpj8hotuuuuupha27chiiiiie82024667667420",0.857,1,0.464,0.76],["8","0000000000003577776422469eiiiihd98bggoqqpppmihkplutpnpssqprtovrlikquuttrnvrmilruuttpowvsqruwutsoowvsrsvwutsonvsnkmrvuttpnvsmjlrutttsmuurpqssporugorrqqpmhgkq9fijjjhd98ch357887642246000000000000",1.1,1,0.45,0.833],["1","0026cffa5100004bkpoh931324aiqtrlb4146bjpturlc5169irvvurlc526airuvurlc5157dkptusld51535bjqtsld515016fotrld515005ensrld515006fotsme625139jrutpia5638gntvusnhba7ensuuutroid7fmqqqqqqojc5bgjkkkkkie8",0.6,1,0.467,1],["1","368cfhjjgeb858bfjmnnkgda6aeinqrqmifc7cglqtuupkhe7bgkqsttokhf7bfkprtsokif69chmprrokif47aeknpqnkif358cilopnlig246bgknpnljh246bgknpnmki469ejmprpomk59chmprsrqon69dhmprrrqom7aeimoqqqpnl6adgkmnnnmlj",0.571,1,0.429,0.667],["1","0139lqk7000003eovxsc10003bpyyzvf1000bovyyzwh1000ftvsvyxi20009kljqyxj20002569mxxi20000004ivwi20000002fuxj20000001dsxk30000000csxk40000001etwk40001245huwn95325eikqwxtnliaaouvxyyyxxui8lsttuuuuusg",0.68,0.926,0.481,0.571],["1","136aejmle70138eknrutka136entuvxulb157hrwxxxulb157gqvvwxvlb164ckprtwvlb1616bgkpvvlb160258fnuvlb160003bluvlb150003bluvlb151358fnuvne5848dglrwwrkcd8fmpsvxxvrlibjsvwwxxwvqlaiqrsrrrsrnh6bghihhhhhfa",0.643,1,0.464,0.75],["1","00009lnc10000015iwxi2000028jtywg200009ltxyvf10000futtyve10000aljnwud00000256hwve10000000evvf10000000duwg20000000bqtf100000009ose10000000brse10000246huui74200aknsxxsnjb00fuxyyxxwsh008ilmnmkjh90",0.556,1,0.481,0.679],["1","0139gkg92000038hosld300049hossld30017fotuskd30049iqttslc30067ekoqslc400847bhmrlc4008124bjqlc40080029iqlc40080029iqlc40080029iqld4008013aiqmd5218258flrnhb6496bglorpmjfbb9horstsrrngb8ekllkkklje8",0.667,1,0.467,0.6],["1","0125899863221359deec8444269eikjgb66638cinpnjd88849flqtrlfaaa49ekpsqlgaaa48cjorqlgabb259flpplgabb136djnolgabb025bhmnlgabb147ejopnjddd37bhnqrqmggf48djorrqmhge5aekoqqplhfd59dhklllifda47adggggeba7",0.556,1,0.444,0.667],["1","026bhmkga65315bjqurme98639hpvyvpgba85clsxyvqhcb85ckswywqhba84ahouxwqhb9725bjrxwqhb97138gpxwqica8027fpxwricb8028gpxwrkec915bjrxxtmhfa49gouyyvrmjc6dlsxzyxvrne7gouxyxxwsoe6elqssssrokb38dhjjjjigc7",0.571,1,0.464,0.84],["1","001coqi40000015nvvo500004blssso50000grutqro80000nwvvtrpa0000hpqqqspc00005abcmsqc00000005msrf10000006nsti20000006ottj20000007pttk30000007ptuk30002afktturigb26nuuvssuuupb7ptrrqqrrsth5jqqqqqqqqma",0.704,1,0.481,0.75],["1","138fkmlha50149hostrme7038hpvwvsof815cmvyxvsof815dmvyxvtof816airvwwtof8165ajquvtog81624clsvtog816017hqutog816007hqutog81624bjrutpib597binsuurmicecjqsuvvtrplkfovvvvvvvurmenttsssssspj9fjjjjjjjigb",0.643,1,0.464,1],["1","00007kph40000027gruo600000boqrto60002bnvurto60005nvvwtto60005lutsruo600029edhquo60000000bquo60000000bpuo60000000bquo60000000bquo60000000bquo60001466gruqb6514hnnqrssonj66ovssrrssura4gnnnnnnnok7",0.63,0.931,0.483,0.75],["1","0014kto91000006htwqd100016htuspd20003kuwtspd20003oxwwupd20002iqnrvpd200016a9nvpd20000003mvpd20000003mvpd20000003mvpd20000003mvpd20000003nvpd20000358puqh75202gmmstrqmle23pxvvttvwxn32jrqqqqqqqg2",0.593,1,0.481,0.714],["1","0028egb51000017gppi810004ahotslb2001ajqtuslb3003fpwvusmc4005bjoprrmd40055adhmqnd50051239iqof50050017hqpg60050017hqqh71060017hqqh7106148fmssmf9573ahnqttqokda5fqwwvvwxumd5fqvvuuuvtmc39gkkkkkkid6",0.688,1,0.469,0.5],["1","138eiifa521338gnsrng84366enuxvqi9449aksxzxrja44bcmuyzwri944bbjrvywqi833a7dkrwvqh832a36emuvqh944b029jtvqia66d019jtvskd99g02bluwtngcbi25eovxvqkgfk4aksxywuplil7fovyyywtpkk8gpuwxxwupjh6cjnopoonjda",0.643,1,0.464,0.8],["1","00138cfe9400137chlonf70238elpsusj9145dmtvwxuka156fqwxxxuka165ensuvxuka1638fkosvuka16137biouuka160014cmuuka160003bltuka160004cmuulb161359gouvne5948dhmrvwqkde7emqsvxxurlj8hrvwwwxwvqk6dlpqqqqqoke",0.643,1,0.464,0.8],["1","0004fmh50000014dsyr8000028irxyr800007lvyyysa0000bsywwyuc10007jomqxve10001579lxwg10000003jyxh20000002ixxj20000002hwyl30000002gwyn50000026jwyp810005djqxytic821drvxyyyvtoa2hwzzyyyzzwg1alpponnonj9",0.667,1,0.481,0.597],["1","00029ff920040049jqpf400703bjqvsi60094bmtvwsi60098juxwwsi60099jstuwsi60095bgkovsi6009135ajtti600a0006htti60070006htti60040006htti60030018jutj811648diovvohb7a8gnpsvvspkdb9jtuttttuqg85bhiiiiiiga4",0.625,1,0.469,0.8],["1","257bfiifb62359dimonje8359ekosusnga46ahnsvwtnga48bhnsvwtnga589ekosusnga586aejorrnga58358ekpqnga58124agnpnga580139gmpnhb59124agnqoic7a47aflqsrmhce8cglpsutqlhhbhmqtvwvtqlkbhnqrsssrpkiafkmnnnnnlif",0.7,1,0.45,0.5],["1","026bgigc731536chmomf94276biostpib53aagntuupib64cahotutpib64c9flqstpib65c6agmpspib75c34ahmqpib75c117ekqpib75c017ekqpic75c14ahnsrmgb8e48flqttpkgdg7dkpsutrolhj8flqtttsrnji8dimnooonkhe6adfgggggfca",0.636,1,0.455,0.75],["1","0014eppc2000017gqxwj400004htyzxl50002dryzzym60005mxxyzym60004hqpuzym500016bdpyyl40000137myxk30000115kwxk30000003jwwk30000003jwxl41000004kxym62101359oyzqc9613elovzzwqph55mxyyzzzzyp83gpqrrrrrqj6",0.615,0.963,0.5,0.857],["1","1358accb9643359cfihfc86559dilnmjfa777bgmprqmhb988djosutnicaa8djptvuojdab7chnrusoidab6aflpsrnidab47cinqrnjdab36aglpqojebc46bhlpqolgef58dinqrqnjhh7bgmqstsqmkk8dhnqsssqnll8cglnoponlkj7beikkkkjihg",0.625,1,0.438,0.667],["1","00008kk900000026juwi100001cpsuvj10003cpywuvj10007pwyxvvj10006pwvuvwj100029dcmuvj10000001juvj10000001juvj10000001juvj10000001juvj10000002kuvj100029cdpuvocc706ottuttutuj37qussrsssum43ciijiiiiib2",0.643,1,0.482,0.667],["1","0009lkh60000027kutsb000017lsrrsb00009krsqqsb0001gututrsb0002dqorvrsb0002498htrra0002000bqrqa00010008nrqb00000004irqe10000002grqf20000002hrqg3000499blqqlca83dqppqpqrpqo9hurrqppqqstb9jkkkkkkklj6",0.667,1,0.481,0.653],["1","013afkfa300014ajpumf41004aipsuog51009hqtuuoh6100bksuuvph61009gmprvph610059cinuqh6101135bjsqh71010017gqri81010015fosi92000015ensja2001237gnskc52159dflpsnjea6aglmoqrpnmhbclssrrrrrtnf8eiiiiiiijga",0.667,1,0.467,0.6],["1","013ahmnke83324aiquurkb464aiqvxwslc597fpvyxwsld6b7hqwyxwsld6b6elsvxwsld6c38dlrvwsld6c135emuwsld6c000aktwsld6c0009ktwsmd7c134dmtwtngae48cjpuwuqlgj7elqtwwvtroo9irvwwwwvvsp8hpttssstsql5bgjjjjjjjhc",0.643,1,0.464,1],["1","026bgjfa521115biormf832239hpuwrja5334bksxytlc6544bksxyumc65438gpvyumd76514bksxund764017gpxund754015eoxumc654016fowtmc654028gpwtmd76426ckrvuoida64ahotwvsojf95cjqtuutrnha5bhmpqppolg936adfggffda5",0.571,1,0.464,0.72],["1","0249ehhc610125bhoqoh92025aipuwskb3037fouxxumc4038gpuxxund4047elquwvoe50449flswvpe50425aiqvvpf515127fovvpf626126enuvqh848249hpvwsld9c48fmswxvqkgg6emswyyxvrmk8hqvxyyyxupl7fnrtuuutqmh5afikkllkiea",0.643,1,0.464,0.85],["1","36aehigc84237bgknnlfa635bhnrttpic737elsvvupic748fmtvwupic758ekqtutpic759aflprspjc7596aglprpjd75825bhmqpjd75813aglqpjd85924agmqpkfa7a6agkorrnjfceaflprttqolhiekqtuvvusqmlekprrssrqplkdimnnnnnnmjg",0.7,1,0.45,0.75],["1","01269cda7310136bgjkga52126bhmqqke7425ahosutng9635cjquvuoga745biptvuoha7549elqtuoha75258gmruoha75124cjptoha750019gntoha75013biotpib85247flquqkeb748dkpsvsnif96ciptvwurmha7djorrsrplha6bgkllllkhd8",0.545,1,0.455,1],["1","025afhe8311127djoqld62335dkrvwqh84458ipvxxsi94568ipuwwrh94566ekptuqg834538djqtqg7245138gotqg7245038fotrh8345038hpusi945615bjrwtlc78839fntxvpicc97elrwyxuojgb9ipuxxxwtojb8hosttttrmh95bgklmmmkgb5",0.571,0.933,0.5,0.64],["1","469cfiigeb8758cfjmmjhd9869dhlppmjfb97afjnssokgcb6aeimqrokgcb69dhlpqnkgcb47aeinomjgcb248bglmljfcb1369ejlkjgcc1259dilkjgdc1269dillkhed359cglnnnkhg58cfkoqqpmki68cgknpppmji69dgknppomji69cgilmmmjhg",0.714,1,0.429,0.667],["1","0039msm9000003dnuxtc00003boxyyve00009muxxywg1000bpuruyxh10006ehgoxwh10000236kvwh20000002guwi20000001dswj20000000brwj20000000cswj30000012etvj410016ackuwpeb945hoqtwxvsrnb7luvwxyyyxse3bikllmmnmi8",0.654,0.963,0.5,0.571],["1","25agknle83235agmrtqia5357elrvvskc6479gnsvwtld7488flqtvtld7596bhmrutld75947cipttld759259gnttmd759248fnttme759249gntume85936ahouuog9695aflrvwrkeab8ekquxxupjfeaiotwxxwsniebiosuvvusnid8ejmoppomid8",0.615,0.929,0.5,0.8],["1","00159ed94101015bjomg831225bkrtrlc5265bkrvvtme6397gpuwvtne65b7fmswwtne65b49fntwune65b137irwunf65b003epwunf65b003dowunf75b014epwuog76b248iqwupia8c6bhoswurnhce9ipuvwwusngebluxxwwwvqhb7eknnnnnmha5",0.667,1,0.467,0.8],["1","026chkid841126dlrtqkc6236dlrvvsme735ajrwxvsmf747eovyxvsmf747enuxxwtmf7479fmrvwtmf74748elswtmf748016gpwtmf747005fpwtmf747016gqwtng95836clswuqkd9a8dkquwvtqkfdckrvvvvuupjfentvtssttqlfaglnmmmmmjfa",0.714,1,0.464,0.8],["1","0038gmld5101149hpusi71035bjquxtj8105ajswxxtj8104cmuwwxtj8103ahnqtxtj810159djpwtj8100135cmvtj8100002alvtj8100002alvtj8100002alwtj8101125dmwulb4246aekqwvpid89ahnpruurplfcdmstsststrjc8eiiiiiijhd7",0.667,0.938,0.5,0.8],["1","0002cml81000003anwuc100003covxsb10001dpwxyr900002lwuuyq800002fnkqxq800000479mxr900000004kxsa10000003iwsb10000002fsp900000002dqn700000002gso800000369lwsf64202emouyxrmia13lwxyyyxvrf22dlmnnmlkg81",0.593,1,0.481,0.679],["1","0003bjh81000004cmtqd200003dnsurf20024cpwuurf20028mvxwvrf20018krtvwrf20003aeiqvrf20000129lvrf20000007lvrf20000007lvrf20000007lvrf20000019mvsg410138ciqvtmeb638jpqsttsqne69msrrrrssrh65chhiiiiiga3",0.619,1,0.476,0.667],["1","12468aba86532469cggec96536aehllifb8748chlpplhda859einrrnieba49dinrrnjeba48bgkpqmiebb369dinoliebb1369ekmkhebb1258djlkiecc2369ejmmkhfe358cgloomjhg58bgkoqqpmki69dhlpqqpmkj69dhkmoomkjh58cfhjkkjhge",0.625,1,0.438,0.667],["1","248dhkkhc85348djnqqmga767djqtwwrjd98agnuwxwrkdaaahovwxwrkdac9flsuwwrkdac6agnruvrkdac36binsvrkdac126dkqurkdac015djpurkebc127ekqvslfde47cjosvtokij7bhoruwvrommagmsvwxwvsrpaglrstttsqpm9ejnnnnnnmli",0.6,1,0.45,1],["5","clmmmmmmmmmeltqrrrrrrsumksrsqqpppppgksqkba999984kspe00000000kspf10000000kspkcbbbba30kspqppppqpa1kurrsssstundafeeeeeejrum121000008ntmcif600007mtmlvrg6555cotmissqmlllossk8kusrrrrtul918kmmmmmnl81",0.741,1,0.481,0.625],["5","7aaaaaaa9741mtttssssrqi5rxxussrsttl6ryuga999aa72rzt900000000qzt910000000ozviba999400lyxvtssssh51erssssuvxvnb4999acegqzyl35411113gxynamk82111dwylduulhgffnxxk7iovvwwwxwob13borsstsl8100279abba510",0.815,1,0.481,0.639],["5","6bgijiiihhe9bkqtuuttttpgfpwxxxxxxwsifpuspmllllibfptngbaaa974fprk92000000gpsohcaaa741hqusollllib5gotttttuvtmcbgjjjjjlosri6acb999bhpsl7dea4103bmrlcmplfcbdiqslcntsnkklptri7fosuuuuvslc26dijjjjkhb4",0.688,1,0.469,0.6],["5","bfeeeeeeefd9ipnnmmmmmnlemurplkkkkljdlvpkdbbbbba7lvng53333332lvnh75555320kuplfeeefb72isrqnnnnolh8dlonnmmnrrqf8dgeeddfmrvk6bc96557howmagic8557howmdmrmheegnrvlakrrpnnostsi5bjnonnnpokb149deeeefd94",0.8,1,0.467,0.75],["5","ckmmmnmllljaoyzzzzzzzzxmozyxvvvuwwsilyvlffeehid6jxsc11113420jxsb00001000lywkbaab9510ozywttttri62lyzzyyyzzukc9jlkjikmqwxm13432234euzp49930000btzqfrpd5456etzpmxxsnmnorwxnfnuyzzzzzvnc48iprrrrsm92",0.741,1,0.481,0.5],["5","dlprrrrrrqpiiswxwwwvvvtljtvtqommmmkejttoidcbbba7jtskb5332221jtsme9777531ktuqlihhhfa5jsvtrqqqrpjbgnqppppqstriaghhgfghlqtn8deb8668emtpbihc7435clspgpqmhedfjptofptsomlnqtsk8hosttttusne28eijiijjid6",0.733,1,0.467,0.75],["5","4ejjkjjjiif5brrrsssssssedsrtuuuuuvuedsqpihgggge6dsph31111110dspg20000000dsplb999a710dspqqppprm40dtssssssutk95ccccccdkstf24410000bqsg9mla1001bqsgeutmdbbcirsg9nttrrrrtupb19orppppspa3019ghggghb20",0.69,1,0.483,0.625],["5","dlmmmllmllh7lvvvwwwwwwqcnwvtqqqqqqlanwsldccccb84nwqd11111001nwqd22222101nwsmffffd711nwvtssstri73jssssstuvsj9affffffiqwsf58642225jusgelg82225iusgnxtleeegowsfiuwtqqqruvnb8jrutttutmb416ejjjjjha20",0.714,1,0.476,0.571],["5","irssssrqrsqgqzzzyyxxyyxmpzxsonmlprnenzug66559c83lztb00002310mzud21122100nzxoggghf820nzzywwxxvna5ivxwvvwxxwqg7gigedfhnwzp25531113etzq9if50001bszrkxth8678huzrlwxvrqqruxwmcktyyyyzzuka36fmnooopk71",0.769,1,0.481,0.603],["5","fjiiiiiiijhaotsttttttushptspkjjjjjicpurh76666653pupd20000000oupf64444310mtrniiiiie61jstttttturi9dmonnnoorusj59bbbbbcjsvp59952112dpuoclle7556gqupeqtqljjjotuo8iqutssstvrh27gnoooooog6015accccca51",0.8,1,0.475,0.629],["5","9lpqqpppponciustttttuuvkiutvvuuuuutgiusnfdddddc5iurg10000000iurg20000000iusneddeda20ivtuttttupa2gttttuuuwvpd6cdddddekuwl13310001aqvlalk91000aqvlixvmdcccisvlervussssuwsg3dsussssutf503djkkkkkf40",0.714,1,0.482,0.571],["5","899999999982pqpppppppqo8rqrsssssstrarrticcccccb4rrsa00000000rrs900000000prshccccc810lqqrrrrrtl62frqqqqqqtupg5bcccccdnvuo37631112htsocqna2112htsoeusnhgghputn8lstsssstvrg16hpoooooqe3004bccccc920",0.815,1,0.481,0.625],["5","7ejkkkkkkkhbcmtvwwvvvvrifpvvutssssogeotrnjiiihf9eorme8666653eorkb4222100eosojfddc951fpuusqppole6ckoppqqrttnd7cfffffhmrrj5ab85336dnrl9gid6224cmrlfptoiedfkqsldlstqnmortqg8dlrtttuurka35bfhhhiif93",0.688,1,0.469,0.467],["5","ailmmmlllljbgrttuuuuuutiirssqpppppneirsngdddddb6irqg51111110irqh62222100irrmgeeee930issrqqqqrka3enooooopssmb6bcccccekstj35520002cosjaiha3113cnsjhttmfddekqtjdotspooortpf5eosrrrrtpg604ciiiiije61",0.667,1,0.476,0.524],["5","clnnnnnnmlkdmyzzzzzzzzynnzytpponnmlemyvi98766542nyud20000000nyud10000000myvledcbb820lyyxwvuuum82ivxyyyyyywod7ehhhhhhnwyn12211111btzp8eb40000aszoiure7655euzojwxtqponrwvl9jtzzzzzzui916hpqqpooi61",0.741,1,0.481,0.625],["5","dkkkkkkkkkg7lttuuuuuuvpcmutsqpppppkamurlddcccc84muod21111101muod22222101muqleeeed701mvtsqqqqqh62jrqqqqqruri99eeeeeegovsf58532225itrfekf72114htrfmwrjdddfnurfhsuspooqttma8jqssssssmb417fiiiiiib20",0.714,1,0.476,0.571],["5","gprrqrrqpnmfmyzzzzzzzzyonzyurqppoongmzvja9877764mzue20000000nyud10000000myvledcbb820kyyxwvutum93hvxxxxxxywpe7dfgggghnwyo11111111btzo7db300009szohtqe7655fuzojvxtpponsxwm9juzzzzzzukb26hpqqpppj72",0.741,1,0.481,0.625],["5","6chiiihhhhfabkrtttttttphepvvusrrrrogeotrnjhhhge9eorme8555542eorkb4221100eosojeddc951fputrpoonke6ckpqqrrsttnd7dggggghmrrj6ac96557enrl9gid6214blqlfosoiedfjqskdlsspnmnqtpg8dlqsssttqja35afhhhhif93",0.688,1,0.469,0.467],["5","9jmmmmmmmlkaiustttttuuvjiutvuuuuuusfiutoedcdcca4iusg10000000iush20000000iusnedddda20ivttttttupa2guuuuuuuwvpd6deeeeeeluwk13310001arvlblk910009qvlixvmcbbcitvkervussssuvsg3drtssssusf403cijjjjje40",0.714,1,0.482,0.587],["5","dlnnnmmmmmh8luuvvvvvvwqcnutspppppplanurkdccccc84nuoc11111101nuod32222101nuqkfeffd601nvtsrrrsqi73jrqqrrrsusj99eeeeeehovrf47532225isrfdkf72225hsrfmwrjeeegnurfituspqqqtuma8iqsssstsmb417eijjjjha20",0.714,1,0.476,0.571],["7","7gijjjjjjkf5kttttsssssshkvvvvvvvurum7giijjjjtttm01222225nuum0000005frwvk000000ctutmb000000csrl81000019lutk5000003lvupd2000003lupd2000005grwqc100000btwsi6100001crth20000000cste000000008nob00000",0.714,1,0.482,0.524],["7","cmpqrrrrqpl9kxzzzzzzzzxibloppppquyxj2567789akwyj00000137ivxk0000019lsurf000002euxoc6000004hwxk4100000drywi3000002lywk81000026ozs90000017htzq7000001csytg4000001cuxl50000000btvg200000007ika10000",0.741,1,0.481,0.514],["7","9gjkkkkkkkf9fpvwwwwwvuoedmrsssstuvri7dghhiilptqi135667ahourj0000039iquph000004eotrjd000018irtnd800004dntqg7500017hrslc440014dntqg6130039jrslb303004dotpg7203004dorj92002003blmf500010027df930000",0.688,1,0.469,0.533],["7","ajmmmmmmmmkbgtvvvvuuutticmppppppsttj49ccddddmstj00111138ltvj0000017hrutg000001bovrj8000004equma100002bntsj7000003htumb3000027ltsg4000016hsupc200001bovqf6100001bnuj500000019msh300000005eia10000",0.714,1,0.476,0.524],["3","03enonnnng302brustttvrb2dqvwvuuuvwqfiwwpedddjuwmblka1000arvm12210001arvm0006ddddjuwm001futttvxuh001fuuuuvxuh0006dddekuwm12210001arvmalka1000arvmiwwndbbcitvmdrvussssuvsg3dstrrssuse403ciiiiiid30",0.714,1,0.482,0.571],["3","027dghggfa5127gossssqlc57gqvxwwwwumcdnutpmlmqtribjmjea9biqtm5ab83103bmsm01258aaciqtl003aillmputk004eotttvxuk0039gjjkottk2356788ahptm7dea5103bmsmdmplgcbdjqtmentsokjlptriafnsttttuslb46chiiiijga4",0.688,1,0.469,0.6],["3","03ckmmmlke514crzzzzzyqd4frxxvtrpuwrekxwogda8iwymblka3100buyn13310000aszo00037999huyo002bosssuwuk002euyyyyxsh0017gjjjovxm00012333cszo488200009rzogqod6544cszomxxsonllpwxlemtyyyyyyvlb47hoqqqqrk82",0.741,1,0.481,0.514],["3","06flllllja106hquuuuutk83grvtpppquskanxtldcceovsgekg81114itsg35422225itsg0039eeegovsf006isrrruwpd006isrrsvwpd0039eeegovsf35422225itsgdkg82225itsgmwskedefnusghsuspppqttmb7iprrrrssla416ehhhhig920",0.714,1,0.476,0.595],["9","7chjkkkjhc73glqrssssqlf8nsuuuuuvusnetvtqooqsuurivvqkggkosutkvvqjffinsusktvtpmmortuskotvvuuvvuvskgnsuuvvvvvsk8diklnqtuvsk369beiosvwtj259cgkpuwupg4ahloruwuqja7fosuvwuqia47fnqqqqnia415aefggfd9510",0.786,1,0.536,0.9],["9","03fnmllllld26eqvtssssuobeqsrnnmmpssnhsri7666eorqhrre00009mrqhrrf1000anrqgttnfeeekqrq9jsvsssssrqq14jsqqppqqqq007ccbbbhprq00000001corq0000002cnttp003899dpuvqe01dpqqrvuqg202lvsssvrc4001dlllllf400",0.741,1,0.519,0.653],["9","0257888863003aegggghfb41akprqppqplc5hstojghkoqh8kvulc88djpiakvtj8239hpiaittmfbcglpjaclqpmklmoqlc5billklmorog148bcccgmssj1122336emttk102457ckprnf128cefkppkd714dlooqpja3003bghghfa300014788863100",0.867,1,0.533,0.792],["9","028aaaab93003cpssrqspd31gqxyxvuvvqh6rxunigehouratyp93113ftsbtyp81002ftsbszsfaaablvucktvtrrrsvywe6eqvwvwyzyxh03cghhimsyyl00111116jwym0000002dqxxl0013449pywnc02ajmmpvwn8203huxxxvj81002ajkkkg6000",0.808,0.963,0.5,0.714],["9","78bdeedb9642cegjkkjhfb74ikmopppnlgb7nopqqqqqpkf9ssrqpprssojcttrqpprstpkdtsrqpprtuqlepooooprtuqkeljkmoqsuuqkegehkoruvvqkdebfjnrtutoicb9dinrttrmgaa9dimpqpmhc799dhlnnlid8589dgjkigc84268beffdb7521",0.667,1,0.556,0.833],["9","3bhmllllg920cmtxxxxwrla4ktwxwwwxvsi9ouqollloswqglrkfaaagmusijqhb444ckutjksnidddiousiepqroooqsuri8hotuuuuttqh17eklllnprpg0259aadjqsrh001234aiqtrh038cddjqvsmc06fmnnqtrkc508irtrsrlb3005cijijhb500",0.75,1,0.531,0.6],["9","27hoppponi71ajtyzzyyyui6mvwtrrrrtwuirytgaaabhtyprzr92112arzqrzsb3112arzqrzwmfcbdjuzpisxxvsstwyyp5erxwvvxyzyo04djihhlqwyo00233236guyo00000029lwyo0012226kwxsh029eefjtzui607luvvwyxma218muuuuunb41",0.731,0.963,0.5,0.679],["9","37beffec95209fknppomhc62gnsuvvvtqkd6ntwwvuvwvrjbswwtqpruwvofuywsnmptwwqhuxwtqpruxxrhrwxwvuvxyxrhnsxyzzzzzwqghmruvvwxywpfcfknoqsvxvod9cgjlnruvskb8chlnqsusnf77dkqtuusng946dlruusng94149glonkf9410",0.786,0.933,0.5,0.9],["9","03fmmmmmlb105fsxwwxxwnb5jtxtpppptvtiqvxk8778mwwoquwg0001hvvoquwh1112ivvoouxqihhiqvvocluwvwwwvtuo17ovvvvvvtuo01dmmmmmsvvo00244459nvvo0000006kuxwl0059aahuxul904ioooswtg4107ovuvwtg50003gppppj5000",0.778,1,0.519,0.775],["9","hjmooonliea7moqrrrqpmjeaqrrsrrsrqnidttssrrstsqkfvutsrrsturmhvusrrrtuvtnissrrrrtuvtoippqqrstuvtoillnprsuvwtoiijmortvwvsnhghlortvvurlffglortuusoidfglorssrokfaegloqqpnkgb7egknonljfb74ceijkjhea742",0.75,1,0.563,0.778],["9","02bhhgggg8104equttttvpa3iuvuttttvwsdnsurnnnnrvtmjqrd4444fusqiqqb2111dvsrgrskdccckusq8jtrooooqrrp15juuuuuusro006giiiimrrn00012225hrrn0002224fsvvp003dffgqutoe008qqoortj60008twvvwt900003ceeeec300",0.815,1,0.519,0.625],["9","8bfikkkkjhd9fimpqqqqqokelorssrrtuupjqstrpnoqtvsmuutpljknrvtnuuupljknrvtosttronoqtwtooprsrqrsuwtoijmnoprtuwtoddehiknqtwto878acejnswtn64469diosvsl556adhmpstoh67aeimpqqoic46afjnonlhc7369dgijhea63",0.8,1,0.55,0.8],["9","6dilmmmmkgb5dnrsrqrsspkbisrojhhkorrhjtpib88cjqtjjtnf6227gotjjtpib88dkqtjhrqnjhikostjclqsrrrstttj6dkpqqrstttj16bfhhilpstj024788bhottj0112249hptrh1369achosqkb27dhikorqkc52ajqsstqja4029glmmlhb410",0.733,1,0.533,0.792],["9","dhmpqrqpmhc7kotvwxwvtpjdquxxxwwwwuqitwxwussuwxtmuxxuropsvxvotwxuropsvxvoruwwussuxyvonrvxxxxxyyvohlqtvvvwxxundfjmooqsvwtnbbdghilpturk99bdfgkosrng89cgiknppmhb69fknopolga548eknonkfa5226bfijhd9520",0.714,1,0.536,0.92],["9","017bbbbba4003cnooooooj71gqutssssttm8ntuohgghnqrdosth2113goreosth2113foqdnuvmdccdlqqefottqqqqrpqh16ltrqqrqqqn018cbbbbhrrq00000004ftsr0000004gptrp006bbbhqtqf902itrrstpg4002hrpppqg200005999995000",0.815,1,0.519,0.625],["9","57befggfeb74bejmnoonlid8hlpssstsrpjcoqtsrpqstuohsturnlmptvqjuvupliknswrktuupliknrwrkqrtsqoprtwrklnqsrrstvxrkghknprtuwxrkbbdhknruwxsk98aeilqtwxqj98afimquvuogacglpruvuqjcadinqssrpjd78bgmooolhc73",0.727,1,0.545,0.8],["9","47chkmnnjf94bfkprtuusng9imqsstuwwtofortsqpruwwskruusonqtwyvnqtusqpruxyvomqtuutvwyyvnhlquwxxyzyumbekqvwxxyxtl78chmoruxxtk547bfinswwsj547aeinsvupg77bgknruvslc8bhnsuwwtnf87cjqvwwuoh9459eimnnkfa51",0.714,1,0.536,1],["9","16gklllkia21alwxyyyxwpd5nwywvuuuxyrcqyshedceoxufoxm51112fwufqxm51112fwwipxrgcccdlwxkelsuuuuuwyxm26kuwxxyyyxn017eghikouxn00012237gsyn0000002cpxxl00279acmxxob00anqrrvtj8200bquvwuj510004cfghf7100",0.778,1,0.519,0.625],["9","14ckmnopoj947fpwyyyzzwoefsvsppqqtxxpjwvi999ahuzrjwtd11119rzqjvsd11108qzpgtumggffjuzp7hrwwxxxxyyq14htwwwwxyzs016ehijjowzs00123577guzt0000135blwzr001468bluvqg019imnpuuk9403huxyzym71002cnqqqpd200",0.741,1,0.519,0.639],["9","017bbbbb940018muuuuuth30bnwyxyyzzti6myxnhhhjpxudpzuc2223fwwdnywf3111dvvdjxypfccckwvdcovxvuvvwyxg26ituuwyyzzk0059abdfmwzn00000016iwzp0000004huywk0028abfrzvh7008ntvwxvj40008nsttsh400002789984000",0.815,1,0.519,0.639],["9","9dhlnnnmjfb7glqsttttsoibmrutsrtuvtofquuqnmoswwqhsvtojilqvwshrvuqmmoswxsiotvusrtvxxsjjouxxxyyzytjdiotuvwxyytj9cimoqsvxxsi77dhkmquxvpf68ejmpsuvrjb5ahnrtutqjc54aiptusoib5238floolga510148ceeb74100",0.786,0.933,0.567,0.867],["9","17dhhhghgc617hpttssssnf6dptsonnptunciusmfeeiovrhjupf4229jtrhjvqh755bkurhhstoiggkpvrhbmtvsrrtuwrh4cjpppprswrh049deeeiovrh0012336fowsh002357cksuod049fhiotwqh707hqrsvuqg8108istssoh82005bghhhd7200",0.75,1,0.531,0.44],["9","cegiiiihgda7hiklllmlkieammnnnnooomhdqppoooqrrplgsrqpooqstrnhtrqpooqsusnirqpoooqsusojnmmmnoqsutojjijklnqsutoiedfhjmpsutoibaceilprtrmh88adhloqrpkf779dhlnoomhc77adhkllkhd968adhiiigd9668adfgfdb853",0.857,1,0.571,0.833],["9","48dfggggfb61bhnqqqqqpkd6jquvvvwwwslcquvtrrsvwwrhuwsmiimqvwukvvqjeeiotvtkvwsnjjmruwtksvvtsstuwwtkkquvwwwwwwtkbfkmnortvwtk47abcglrvwtk12468dlsxwsi1358chpvxvoe37cgkptwvph849gkortsog8338ehkllje831",0.786,1,0.536,0.8],["9","05iqqqqqroa18juwvvvvwwnahvvplllmqvvmivre6557grumivqa0002cptmivqb2224eptmivuojjjkpstm9kuwvvvvustm17ovuuuuursm02cmnnnosstm0024556akrtm0000004gsuvn003678fsvwui03flllpvuod506outttwq81004jsssssg100",0.704,1,0.519,0.75],["9","8dilnnnlhc74gmruvvvtqlf9otwxxwxxwtmetxxvtsuwxxrivywuqpruxytkuyxurrsvyyulswxwvvwxyyumnswyzzzzzyumhmsvxxyyzyumaekoqsuxyyul79eimpswyxsj58ejmptwwtnf6biortvwtog96dlsvwwtog945ckqttrnha4138eikkifa521",0.786,1,0.536,1],["9","049bbbbba5106fmnnnnnnh82gqutssssurj8nutojiikpspepuqf6558iqpfoupd2115gqpfovrjbbbelrpfjstrnnnoqrqh8hqusssssrrk15dihhhimrtn01244448iruo0000004dnsuo014778entrmf04dlklpssja306kutttsla3004ciiiiha200",0.8,1,0.525,0.657],["9","59cfgggec842bhmoqqpolgb5iotvwwwvtpiaouxxwwwxxuoerwwurrsvxxsiswvsonptwxtjrvvspoqtxxtkpuwwutuwyytkkqvyyyyzzysjfjortuvwyxsjacgjlnquxxrh67adfinswvpf469dfjosuqjb37chlorrpjc627ekoqqnib5226chklkfa510",0.786,1,0.536,0.9],["9","37chklkie9419elqtttsoib5hmtwxxxwuqiaoswwussuwvpgrvxvqmmrvxsjsvxvpmmrvxtkruxwtrruxxtkorvyxwwxyytkjlrvwxxyyxsjffjoqstvxxrib9dilnptwvpf98bhknpturkb88elprtusle769hpuwvsme7337elqrqlf831148dghfb7310",0.667,1,0.533,0.9],["9","02ahhhhhhe714bmsssrrsqj7bmttqpppstsggrtngddekrumgrsi5222coumgrsi5212coumfsvogeeelrum9jsurqqqssum27iqrqqqrsum117dfeeflqum10122336hqum1000115dotuj1049cchqxvoc02cmppsvtmc303gsutuumb3001ahjjjjb300",0.714,1,0.524,0.571],["9","37begggec8419gmpqrqpnhb5jpuvvvvvvrkaqvvusstvwvqfuwtokknrvwsivwrkfeiouwtjtvsnihlquwtjotusqqsuwwtjgmsuvvwwwwsj8ekprsuwxwtj36bfimquxxti247bfkqvxwrh47dhkotwwtlc5clqtvxxtmd66eouvwvsmd5149fjllkhc610",0.733,1,0.533,0.875],["9","adhklmmljhc8hkoqrrsrqojdoqttsrstttohsturpnoqtvqkuuupljknrvrluuupljknrvrlsturpnoqsvrlprttsrstuwsljlnpqrtuvwsleegjlnqtvxsl99adhkosvwsl889dgkosuvpi9adhlorttrleachmprttrnga8chmpppnkfa569dhjjjgd952",0.8,1,0.55,0.867],["9","hjlnoonmkhc9mnpqqqqpolgcqqqqqqrsrpkfssrrqqsttrmhtssrqqstusnirrqqqqstvtoinnoppqstvtoikkmnpqsuvtoiggjmpruvwtoidehlpsuvvsnhbcglpstutqkfacgkorssqnhcacgjnppomje99bfilmmkiea69behjjigd96379ceffdb8632",0.75,1,0.563,0.778],["9","39fkmnnmje83aipuwwwwuog8kqtsrrsvwundrusmiimrvvrhvvqicchotvsiwwqicdipuvsitusnijnruvsimqrqoortuvsidinpqrsuvvsi69fjmoruvvsi248dgkquwwrh237cglqvwund47cgjnsvupg85ainrtvuog834bkqtutog83127eknnke7200",0.733,1,0.533,0.875],["9","8aehjkkkkie9egkmnoopqpkelnpponortupirrrokhjnrvrlttsnifhlqvrlttsnifimqvrlqrrpmklorvrlllnoooprtwrlffilnorsuwsla9bfilpsuwsl867bglpsvwrk757bglpsuuoh769dimqssqjd67cinstspkd847cimqqnjd8435aeikjgc741",0.727,1,0.545,0.8],["9","aeimooomje95jnruvwvusnhaptwxxwvwvtoguwywusstvvskvxyvspprvwtmuxywtqpsvwuntvxxvutvxxunpswyyyxyyyunjmrvwwwxyxundfjnpqruwxun9adgjlnsvwtm88cfikosvvrj9bfjmoruvsnfaekpsuvvtoha9elruvusnga56afknonje952",0.714,1,0.536,0.96],["9","8ejmmmmlid83hotuuuuusng8puwussuwwuoeuwsnjjnrvwsiwwqjddiouwtjwwrlhhlquwtjuwvspqsuwwtjntxyxyyxxxtjejoqqrtuwwsj59efginswwtj13578dkrwxsi1368bgnuxund48dhkotvuof86cknpsutnf726cjmnoolf82048cdeeeb7300",0.786,1,0.536,0.767],["9","15eklnoonf628isxyyyzytjakuvrpppquyvjnxrd8899jxxmnwp70111dwxlnvn71000cvxlkusifeeelxxkaluwwwwwxyxl18mvwwwxyzxm029fhjjkqxyn00124678iwyo0000236doxxm002478dovunc03cknorvrg7306nxyzzvg30005hprrrn9000",0.704,1,0.519,0.625],["9","deghhhhgec96ijkllllljgc9mnooopppolhcqqqqqqrsspkfsrrqpqsturmhsrrqqqsuvtoiqqqqqrtuvtojnnopqrtuwuojiilnprtvwuojefilortvvtniccgkoruvvsmgabfkortuspjebcgkoqsrplgbbdhknppolhc8bdhkmmljgc85acfijjhfb852",0.75,1,0.563,0.778],["9","15djjjjjjc408hputtttupe5isvuttttvupemutojiijotulksof5444eotmjrod3112cntmisskeccdkqtmcntspppprssn4blstttttssn029hjkjjmqsn00145559ipsn0001113dotvo004adcfnvvqg01alqopsupe501botsstrg40006dhhhhe610",0.8,1,0.525,0.8]];
@@ -1658,6 +2171,11 @@ window.BUNKER_EXAMPLE_IMG = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/
     var im = new Image();
     im.onload = function () {
       exampleShot = { img: im, sx: 0, sy: 0, sw: im.naturalWidth, sh: im.naturalHeight, aligned: true };
+      try { // o exemplo tambem serve de modelo para achar o painel em fotos
+        var tc = document.createElement('canvas'); tc.width = im.naturalWidth; tc.height = im.naturalHeight;
+        tc.getContext('2d').drawImage(im, 0, 0);
+        window.BunkerLocator.setTemplate({ data: tc.getContext('2d').getImageData(0, 0, tc.width, tc.height).data, width: tc.width, height: tc.height, channels: 4 });
+      } catch (e) {}
       if (!shot && tagKey === 'tag.example') { shot = exampleShot; drawView(lastRes); }
     };
     im.src = window.BUNKER_EXAMPLE_IMG;
@@ -1678,6 +2196,7 @@ window.BUNKER_EXAMPLE_IMG = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/
   function drawView(res) {
     if (res !== undefined) lastRes = res;
     res = lastRes;
+    if (adjust) return drawAdjust();
     var W = canvas.width, H = canvas.height;
     ctx.fillStyle = '#0b0a08'; ctx.fillRect(0, 0, W, H);
     if (!shot) {
@@ -1737,45 +2256,218 @@ window.BUNKER_EXAMPLE_IMG = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/
     return new Promise(function (resolve, reject) {
       var url = URL.createObjectURL(file), im = new Image();
       im.onload = function () {
-        var c = document.createElement('canvas'); c.width = im.naturalWidth; c.height = im.naturalHeight;
-        c.getContext('2d').drawImage(im, 0, 0); URL.revokeObjectURL(url); resolve(c);
+        // foto de celular pode ter 12+ megapixels: reduz para no maximo 3200 px (ainda sobra nitidez)
+        var w = im.naturalWidth, h = im.naturalHeight;
+        var f = Math.min(1, (w / h >= 1.5 ? 5200 : 3200) / Math.max(w, h)); // print largo fica inteiro
+        var c = document.createElement('canvas'); c.width = Math.round(w * f); c.height = Math.round(h * f);
+        c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); URL.revokeObjectURL(url); resolve(c);
       };
       im.onerror = function () { URL.revokeObjectURL(url); reject(new Error('imagem')); };
       im.src = url;
     });
   }
 
-  var lastFile = null;
+  var lastFile = null, lastPhoto = null, adjust = null;
+  var LOC = window.BunkerLocator, VW = VIEW.x1 - VIEW.x0, VH = VIEW.y1 - VIEW.y0;
+  var btnAdjust = document.getElementById('btn-adjust'), adjustBar = document.getElementById('adjust-bar');
+
   function handleFile(file) {
     if (!file || !/^image\//.test(file.type)) { setStatus('st.notImage', 'bad'); return; }
     lastFile = file;
+    exitAdjust(false); btnAdjust.hidden = true;
     setStatus('st.reading', '');
     fileToCanvas(file).then(function (full) {
       var w = full.width, h = full.height, aspect = w / h;
-      var aligned = aspect > 2.2 && aspect < 2.5; // 21:9, como os prints do jogo
-      var f = RD.frame({ width: w, height: h });
-      shot = aligned
-        ? { img: full, sx: f.ox + VIEW.x0 * f.s, sy: VIEW.y0 * f.s, sw: (VIEW.x1 - VIEW.x0) * f.s, sh: (VIEW.y1 - VIEW.y0) * f.s, aligned: true, full: full }
-        : { img: full, sx: 0, sy: 0, sw: w, sh: h, aligned: false, full: full };
-      setTag(aligned ? '' : 'tag.format');
       unsure = {};
-      if (!aligned) {
-        drawView(null);
-        setStatus('st.format', 'warn', null, true);
-        return;
+      // 1) print 21:9 inteiro: leitura direta, como sempre foi
+      if (aspect > 2.2 && aspect < 2.5) {
+        var data = full.getContext('2d').getImageData(0, 0, w, h);
+        var res = RD.read({ data: data.data, width: w, height: h, channels: 4 }, TPL);
+        if (res.looksLikePanel) {
+          var f = RD.frame({ width: w, height: h });
+          shot = { img: full, sx: f.ox + VIEW.x0 * f.s, sy: VIEW.y0 * f.s, sw: VW * f.s, sh: VH * f.s, aligned: true, full: full };
+          lastPhoto = null; setTag('');
+          applyReading(res, 'print');
+          return;
+        }
       }
-      var data = full.getContext('2d').getImageData(0, 0, w, h);
-      var res = RD.read({ data: data.data, width: w, height: h, channels: 4 }, TPL);
-      if (!res.looksLikePanel) {
-        drawView(null);
-        setStatus('st.noPanel', 'warn', null, true);
-        return;
-      }
-      applyReading(res, 'print');
+      // 2) qualquer outra imagem (16:9, recorte, janela, foto do monitor): acha o painel e endireita
+      lastPhoto = { canvas: full, corners: null };
+      setStatus('st.locating', '');
+      setTimeout(function () { locateAndRead(null); }, 30);
     }).catch(function () { setStatus('st.openFail', 'bad'); });
   }
 
+  function looksScreen(w, h) { // proporcoes de tela de jogo; foto de celular costuma ser 4:3
+    var a = w / h;
+    return [16 / 9, 16 / 10, 2560 / 1080, 3440 / 1440, 32 / 9].some(function (x) { return Math.abs(a / x - 1) < 0.012; });
+  }
+  function defaultCorners(w, h) { // quadro inicial do ajuste: centrado, 70% da imagem
+    var k = Math.min(w * 0.7 / VW, h * 0.7 / VH), cw = VW * k, ch = VH * k, x = (w - cw) / 2, y = (h - ch) / 2;
+    return [[x, y], [x + cw, y], [x + cw, y + ch], [x, y + ch]];
+  }
+  function sharpen(img) { // realce de nitidez so na area do painel (melhora leitura de foto)
+    var W = img.width, d = img.data, out = new Uint8ClampedArray(d), sigma = 2, amt = 1.5;
+    var r = Math.ceil(sigma * 2.5), k = [], ks = 0, i;
+    for (i = -r; i <= r; i++) { var v = Math.exp(-i * i / (2 * sigma * sigma)); k.push(v); ks += v; }
+    for (i = 0; i < k.length; i++) k[i] /= ks;
+    var tmp = new Float32Array(VW * VH * 3), x, y, c, j, s2;
+    for (y = 0; y < VH; y++) for (x = 0; x < VW; x++) for (c = 0; c < 3; c++) {
+      s2 = 0; for (j = -r; j <= r; j++) s2 += k[j + r] * d[((y + VIEW.y0) * W + VIEW.x0 + Math.min(VW - 1, Math.max(0, x + j))) * 4 + c];
+      tmp[(y * VW + x) * 3 + c] = s2;
+    }
+    for (y = 0; y < VH; y++) for (x = 0; x < VW; x++) for (c = 0; c < 3; c++) {
+      s2 = 0; for (j = -r; j <= r; j++) s2 += k[j + r] * tmp[(Math.min(VH - 1, Math.max(0, y + j)) * VW + x) * 3 + c];
+      var o = ((y + VIEW.y0) * W + VIEW.x0 + x) * 4 + c; out[o] = d[o] + amt * (d[o] - s2);
+    }
+    return { data: out, width: img.width, height: img.height, channels: 4 };
+  }
+
+  function clearFields() {
+    ['in-input', 'in-a', 'in-b'].forEach(function (id) { document.getElementById(id).value = ''; });
+    for (var r = 0; r < ROWS; r++) rows[r] = [null, null];
+    unsure = {}; lastRes = null; setNote('note.default'); solve();
+  }
+  function locateAndRead(manual) {
+    var full = lastPhoto.canvas, w = full.width, h = full.height;
+    var id = full.getContext('2d').getImageData(0, 0, w, h);
+    var img = { data: id.data, width: w, height: h, channels: 4 }, loc = null;
+    try {
+      loc = LOC.locate(img, manual ? { hint: manual } : null);
+      if (manual) {
+        if (loc) loc.photo = true;
+        // nao confirmou perto do quadro? confia no quadro que a pessoa posicionou
+        if (!loc || loc.score < 0.45) loc = { corners: manual, score: 1, photo: true };
+      }
+    } catch (e) { loc = manual ? { corners: manual, score: 1, photo: true } : null; }
+    if (!loc || loc.score < 0.45) {
+      lastPhoto.corners = manual || (loc && loc.score > 0.25 ? loc.corners : defaultCorners(w, h));
+      shot = null; clearFields(); enterAdjust(); setStatus('st.notFound', 'warn');
+      return;
+    }
+    lastPhoto.corners = loc.corners;
+    var span = Math.hypot(loc.corners[1][0] - loc.corners[0][0], loc.corners[1][1] - loc.corners[0][1]);
+    var rect = LOC.rectify(img, loc.corners);
+    var vc = document.createElement('canvas'); vc.width = VW; vc.height = VH;
+    var vd = vc.getContext('2d').createImageData(VW, VH);
+    for (var y = 0; y < VH; y++) vd.data.set(rect.data.subarray(((y + VIEW.y0) * rect.width + VIEW.x0) * 4, ((y + VIEW.y0) * rect.width + VIEW.x1) * 4), y * VW * 4);
+    vc.getContext('2d').putImageData(vd, 0, 0);
+    shot = { img: vc, sx: 0, sy: 0, sw: VW, sh: VH, aligned: true, full: vc };
+    setTag(''); btnAdjust.hidden = false;
+    if (span < 600) { clearFields(); setStatus('st.tooSmall', 'warn'); return; } // numeros pequenos demais: melhor nao chutar
+    var photo = loc.photo || !looksScreen(w, h);
+    var opts = photo ? { strict: { d: 0.03, m: 0.012 } } : null;
+    var A = RD.read(sharpen(rect), TPL, null, opts), B = RD.read(rect, TPL, null, opts);
+    if (!A.looksLikePanel) { clearFields(); setStatus('st.notFound', 'warn'); return; }
+    // as duas leituras (com e sem nitidez) discordam numa casa? entao ela vai para "confira"
+    for (var r = 0; r < 8; r++) for (var c = 0; c < 2; c++) if (A.rows[r][c] !== B.rows[r][c]) A.unsure.push('linha ' + (r + 1) + (c ? ' azul' : ' vermelho'));
+    [['input', 'Input'], ['a', 'Output A'], ['b', 'Output B']].forEach(function (q) { if (A[q[0]] !== B[q[0]]) A.unsure.push(q[1]); });
+    applyReading(A, photo ? 'photo' : 'print');
+  }
+
+  /* ---------- Ajuste manual: arrastar os 4 cantos ---------- */
+  function fitPhoto() {
+    var full = lastPhoto.canvas, W = canvas.width, H = canvas.height, k = Math.min(W / full.width, H / full.height);
+    return { k: k, ox: (W - full.width * k) / 2, oy: (H - full.height * k) / 2 };
+  }
+  function enterAdjust() {
+    if (!lastPhoto) return;
+    adjust = { corners: (lastPhoto.corners || defaultCorners(lastPhoto.canvas.width, lastPhoto.canvas.height)).map(function (p) { return p.slice(); }), drag: -1 };
+    view.classList.add('adjusting'); adjustBar.hidden = false; btnAdjust.hidden = true;
+    setTag('tag.adjust'); setStatus('st.adjust', ''); drawAdjust();
+  }
+  function exitAdjust(redraw) {
+    if (!adjust) return;
+    adjust = null; view.classList.remove('adjusting'); adjustBar.hidden = true;
+    if (lastPhoto && shot) btnAdjust.hidden = false;
+    if (redraw) { setTag(''); drawView(); }
+  }
+  function drawAdjust() {
+    var W = canvas.width, H = canvas.height, fp = fitPhoto(), full = lastPhoto.canvas;
+    ctx.fillStyle = '#0b0a08'; ctx.fillRect(0, 0, W, H);
+    ctx.drawImage(full, fp.ox, fp.oy, full.width * fp.k, full.height * fp.k);
+    canvas.setAttribute('aria-label', t('cva.adjust'));
+    var Hm = LOC.fromCorners(adjust.corners); if (!Hm) return;
+    function P(x, y) { var q = LOC.apply(Hm, x, y); return [fp.ox + q[0] * fp.k, fp.oy + q[1] * fp.k]; }
+    function quad(x0, y0, x1, y1) { var a = P(x0, y0), b = P(x1, y0), c = P(x1, y1), d = P(x0, y1); ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.lineTo(c[0], c[1]); ctx.lineTo(d[0], d[1]); ctx.closePath(); }
+    ctx.lineWidth = 2; ctx.strokeStyle = '#f0c04a'; quad(VIEW.x0, VIEW.y0, VIEW.x1, VIEW.y1); ctx.stroke();
+    ctx.strokeStyle = '#3ee07a';
+    var G = RD.GEO;
+    RD.ROW_Y.forEach(function (y) { quad(G.labelRed.x0, y + G.labelTop, G.labelRed.x1, y + G.labelBottom); ctx.stroke(); quad(G.labelBlue.x0, y + G.labelTop, G.labelBlue.x1, y + G.labelBottom); ctx.stroke(); });
+    ['input', 'outA', 'outB', 'curA', 'curB'].forEach(function (key) { var b = G[key]; quad(b[0], b[1], b[2], b[3]); ctx.stroke(); });
+    adjust.corners.forEach(function (p, i) {
+      var x = fp.ox + p[0] * fp.k, y = fp.oy + p[1] * fp.k;
+      ctx.beginPath(); ctx.arc(x, y, 13, 0, Math.PI * 2); ctx.fillStyle = i === adjust.drag ? '#3ee07a' : 'rgba(240,192,74,.85)'; ctx.fill();
+      ctx.lineWidth = 2; ctx.strokeStyle = '#1a1406'; ctx.stroke();
+    });
+  }
+  function canvasPoint(e) {
+    var b = canvas.getBoundingClientRect();
+    return [(e.clientX - b.left) * canvas.width / b.width, (e.clientY - b.top) * canvas.height / b.height];
+  }
+  canvas.addEventListener('pointerdown', function (e) {
+    if (!adjust) return;
+    var p = canvasPoint(e), fp = fitPhoto(), best = -1, bd = 1e9;
+    adjust.corners.forEach(function (c, i) { var d = Math.hypot(fp.ox + c[0] * fp.k - p[0], fp.oy + c[1] * fp.k - p[1]); if (d < bd) { bd = d; best = i; } });
+    if (bd > 70) return;
+    adjust.drag = best; canvas.setPointerCapture(e.pointerId); e.preventDefault(); drawAdjust();
+  });
+  canvas.addEventListener('pointermove', function (e) {
+    if (!adjust || adjust.drag < 0) return;
+    var p = canvasPoint(e), fp = fitPhoto(), full = lastPhoto.canvas;
+    adjust.corners[adjust.drag] = [Math.max(0, Math.min(full.width, (p[0] - fp.ox) / fp.k)), Math.max(0, Math.min(full.height, (p[1] - fp.oy) / fp.k))];
+    drawAdjust();
+  });
+  ['pointerup', 'pointercancel'].forEach(function (ev) { canvas.addEventListener(ev, function () { if (adjust) { adjust.drag = -1; drawAdjust(); } }); });
+  btnAdjust.addEventListener('click', enterAdjust);
+  document.getElementById('btn-adjust-cancel').addEventListener('click', function () {
+    exitAdjust(true);
+    setStatus(shot ? 'st.idle' : 'st.notFound', shot ? '' : 'warn');
+  });
+  document.getElementById('btn-reread').addEventListener('click', function () {
+    if (!adjust) return;
+    var c = adjust.corners.map(function (p) { return p.slice(); });
+    exitAdjust(false); setStatus('st.locating', '');
+    setTimeout(function () { locateAndRead(c); }, 30);
+  });
+
+  // Leitura sem solucao? Tenta a 2a opcao do leitor nos caracteres duvidosos (1 ou 2 trocas)
+  // e fica com a que faz o painel fechar. A casa trocada continua marcada para conferir.
+  function fixByPuzzle(res) {
+    if (!res.alts || res.input === null || res.a === null || res.b === null) return null;
+    function ok(cfg) {
+      try { return S.solve(cfg.input, cfg.a, cfg.b, cfg.rows.map(function (p) { return [S.parseOp(p[0]), S.parseOp(p[1])]; })).ok; }
+      catch (e) { return false; }
+    }
+    function clone() { return { input: res.input, a: res.a, b: res.b, rows: res.rows.map(function (r) { return r.slice(); }) }; }
+    if (ok(clone())) return null;
+    var opts = [];
+    Object.keys(res.alts.cells).forEach(function (k) {
+      res.alts.cells[k].forEach(function (q) { opts.push({ key: k, m: q.m, set: function (cfg) { var rc = k.split('-'); cfg.rows[+rc[0]][+rc[1]] = q.t; } }); });
+    });
+    ['input', 'a', 'b'].forEach(function (n) { (res.alts[n] || []).forEach(function (q) { opts.push({ key: n, m: q.m, set: function (cfg) { cfg[n] = q.t; } }); }); });
+    opts.sort(function (x, y) { return x.m - y.m; });
+    for (var i = 0; i < opts.length; i++) { var c1 = clone(); opts[i].set(c1); if (ok(c1)) return { cfg: c1, keys: [opts[i].key] }; }
+    var tries = 0;
+    for (i = 0; i < opts.length; i++) for (var j = i + 1; j < opts.length && tries < 400; j++) {
+      if (opts[i].key === opts[j].key) continue;
+      tries++; var c2 = clone(); opts[i].set(c2); opts[j].set(c2);
+      if (ok(c2)) return { cfg: c2, keys: [opts[i].key, opts[j].key] };
+    }
+    return null;
+  }
+  function applyFix(res) {
+    var fx = fixByPuzzle(res); if (!fx) return;
+    res.input = fx.cfg.input; res.a = fx.cfg.a; res.b = fx.cfg.b; res.rows = fx.cfg.rows;
+    res.unsure = (res.unsure || []).slice();
+    fx.keys.forEach(function (k) {
+      if (/-/.test(k)) { var rc = k.split('-'); res.unsure.push('linha ' + (+rc[0] + 1) + (+rc[1] ? ' azul' : ' vermelho')); }
+      else res.unsure.push({ input: 'Input', a: 'Output A', b: 'Output B' }[k]);
+    });
+  }
+
   function applyReading(res, source) {
+    if (source === 'print') applyFix(res); // em foto a troca automatica erra mais do que acerta: so marca para conferir
     document.getElementById('in-input').value = res.input;
     document.getElementById('in-a').value = res.a;
     document.getElementById('in-b').value = res.b;
@@ -1788,7 +2480,7 @@ window.BUNKER_EXAMPLE_IMG = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/
       var m = /linha (\d) (azul|vermelho)/.exec(u);
       if (m) unsure[(m[1] - 1) + '-' + (m[2] === 'azul' ? 1 : 0)] = 1;
     });
-    setNote(source === 'claude' ? 'note.claude' : 'note.print');
+    setNote(source === 'claude' ? 'note.claude' : source === 'photo' ? 'note.photo' : 'note.print');
     solve();
     var nU = Object.keys(unsure).length, numU = (res.unsure || []).filter(function (u) { return !/linha/.test(u); });
     if (!lastRes || !lastRes.ok) setStatus('st.noCombo', 'bad');
@@ -1796,7 +2488,43 @@ window.BUNKER_EXAMPLE_IMG = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/
     else setStatus(source === 'claude' ? 'st.okClaude' : 'st.okPrint', 'ok');
   }
 
-  document.getElementById('file-in').addEventListener('change', function (e) { handleFile(e.target.files[0]); e.target.value = ''; });
+  /* ---------- Camera ao vivo (celular): toca, aponta, tira a foto, ja le ---------- */
+  var camStream = null, camVideo = document.getElementById('cam-video'), camBar = document.getElementById('cam-bar'), camGuide = document.getElementById('cam-guide');
+  function stopCam() {
+    if (camStream) { camStream.getTracks().forEach(function (tk) { tk.stop(); }); camStream = null; }
+    camVideo.hidden = true; camGuide.hidden = true; camBar.hidden = true; camVideo.srcObject = null; view.classList.remove('camming');
+  }
+  function openCam() {
+    var md = navigator.mediaDevices;
+    if (!md || !md.getUserMedia || !window.isSecureContext) { document.getElementById('cam-in').click(); return; }
+    exitAdjust(false);
+    md.getUserMedia({ video: { facingMode: { ideal: 'environment' }, width: { ideal: 3840 }, height: { ideal: 2160 } }, audio: false }).then(function (st) {
+      camStream = st; camVideo.setAttribute('playsinline', ''); camVideo.setAttribute('webkit-playsinline', ''); camVideo.muted = true; camVideo.srcObject = st; view.classList.add('camming'); camVideo.hidden = false; camGuide.hidden = false; camBar.hidden = false;
+      camVideo.setAttribute('aria-label', t('cva.camera'));
+      return camVideo.play();
+    }).then(function () {
+      setStatus('st.camera', '');
+      document.getElementById('view').scrollIntoView({ block: 'start', behavior: 'smooth' });
+      document.getElementById('btn-shoot').focus();
+    }).catch(function () {
+      // sem camera ao vivo: o iPhone so abre a camera do celular com um toque, entao mostra o botao
+      stopCam(); setStatus('st.camDenied', 'warn');
+      var ca = document.getElementById('cam-app'); ca.hidden = false; ca.focus && ca.focus();
+    });
+  }
+  document.getElementById('btn-cam').addEventListener('click', openCam);
+  document.getElementById('btn-cam-cancel').addEventListener('click', function () { stopCam(); setStatus('st.idle', ''); });
+  document.getElementById('btn-shoot').addEventListener('click', function () {
+    var w = camVideo.videoWidth, h = camVideo.videoHeight; if (!w || !h) return;
+    var c = document.createElement('canvas'); c.width = w; c.height = h; c.getContext('2d').drawImage(camVideo, 0, 0, w, h);
+    stopCam();
+    c.toBlob(function (b) { if (b) handleFile(new File([b], 'foto-painel.jpg', { type: 'image/jpeg' })); }, 'image/jpeg', 0.95);
+  });
+  window.addEventListener('pagehide', stopCam);
+
+  ['file-in', 'cam-in'].forEach(function (id) {
+    document.getElementById(id).addEventListener('change', function (e) { document.getElementById('cam-app').hidden = true; handleFile(e.target.files[0]); e.target.value = ''; });
+  });
   document.addEventListener('paste', function (e) {
     var cd = e.clipboardData; if (!cd) return;
     var files = cd.files || [];
@@ -1895,6 +2623,7 @@ window.BUNKER_EXAMPLE_IMG = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/
     document.getElementById('in-a').value = '';
     document.getElementById('in-b').value = '';
     for (var r = 0; r < ROWS; r++) rows[r] = [null, null];
+    stopCam(); exitAdjust(false); lastPhoto = null; btnAdjust.hidden = true;
     unsure = {}; shot = null; setTag(''); setStatus('st.idle', '');
     setNote('note.default');
     solve();
@@ -1902,6 +2631,7 @@ window.BUNKER_EXAMPLE_IMG = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/
   }
   document.getElementById('btn-clear').addEventListener('click', clearAll);
   document.getElementById('btn-example').addEventListener('click', function () {
+    stopCam(); exitAdjust(false); lastPhoto = null; btnAdjust.hidden = true;
     unsure = {}; shot = exampleShot; setTag('tag.example');
     setStatus('st.idle', '');
     load(EXAMPLE);
@@ -1917,10 +2647,17 @@ window.BUNKER_EXAMPLE_IMG = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/
     emptyBtn.textContent = t('op.empty');
     if (cursor) document.getElementById('sheet-col').textContent = t(cursor.c ? 'sheet.blue' : 'sheet.red');
     var bc = document.getElementById('btn-claude'); bc.textContent = t(claudeCtl ? 'btn.stop' : 'btn.claude');
+    if (camStream) camVideo.setAttribute('aria-label', t('cva.camera'));
     renderStatus(); setTag(tagKey); setNote(noteKey); solve();
   };
-  window.__bunker = { load: load, rows: rows, handleFile: handleFile, unsure: function () { return unsure; }, last: function () { return lastRes; } };
+  window.__bunker = { lastPhoto: function () { return lastPhoto; }, adjustCorners: function () { return adjust && adjust.corners; }, load: load, rows: rows, handleFile: handleFile, unsure: function () { return unsure; }, last: function () { return lastRes; } };
 })();
+</script>
+<script>
+/* App instalavel e offline: so no site publicado (https) */
+if ('serviceWorker' in navigator && location.protocol === 'https:' && /github\.io$/.test(location.hostname)) {
+  window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });
+}
 </script>
 <script>
 /* Barra de apoio: esconde links sem endereco; o X esconde por 7 dias (lembrado neste navegador). */
