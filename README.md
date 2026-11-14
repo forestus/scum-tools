@@ -14,7 +14,21 @@ Solves the hacking panel on abandoned bunker doors: take a screenshot of the hac
 2. Go back to the page and press **Ctrl+V**. No need to save or crop the screenshot.
 3. Turn on the switches marked in green, check that the displays show the indicated numbers, and **pull the lever**.
 
-On mobile, use the **Do celular** (from phone) button to pick the photo. If the screenshot isn't recognized, you can fill in the numbers by hand: tap each cell and choose the operation.
+If the screenshot isn't recognized, you can fill in the numbers by hand: tap each cell and choose the operation.
+
+### On your phone
+
+Playing on the PC with the site open on your phone? Tap **Photo of panel**, point the camera at the monitor and tap **Take photo**. The camera opens right inside the page, on Android and iPhone. You can also pick a photo you already took with **Choose from gallery**.
+
+The page finds the panel in the photo by itself. If it can't, drag the corners onto the panel and tap **Read again**. Photos read less reliably than screenshots, so cells the page isn't sure about are marked in yellow: check those before pulling the lever.
+
+### Install as an app
+
+The page can be installed like an app: use **Add to Home screen** (phone) or the install icon in the address bar (Chrome/Edge on PC). It opens in its own window and loads instantly.
+
+### Languages
+
+The page opens in your browser's language: English, Português (Brasil), Español, Français, Deutsch, Polski, Русский, 简体中文, 繁體中文 and ไทย. You can switch at the top of the page.
 
 ### Privacy and safety
 
@@ -25,6 +39,10 @@ On mobile, use the **Do celular** (from phone) button to pick the photo. If the 
 ### Accessibility
 
 The page works with keyboard and screen readers, adapts to phone, tablet and desktop, and respects the system's reduced-motion and high-contrast settings.
+
+### Kept up to date
+
+The "Updated" badge at the top shows when the page was last checked against the game. This repository checks SCUM's news on Steam every day and opens an issue when a new patch comes out, so the tool gets re-tested after each update.
 
 ## Support
 
