@@ -2750,7 +2750,9 @@ if ('serviceWorker' in navigator && location.protocol === 'https:' && /github\.i
   function call(path) {
     if (!LIVE) return Promise.resolve(null);
     try {
-      return fetch(API + path, { cache: 'no-store', keepalive: true })
+      var opt = { cache: 'no-store', keepalive: true };
+      if (window.AbortSignal && AbortSignal.timeout) opt.signal = AbortSignal.timeout(8000); // servico lento: desiste e segue
+      return fetch(API + path, opt)
         .then(function (r) { return r.ok ? r.json() : null; })
         .then(function (j) { return j && typeof j.value === 'number' ? j.value : null; })
         .catch(function () { return null; });

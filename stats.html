@@ -90,7 +90,9 @@
     if (busy || !queue.length) return;
     busy = true;
     var job = queue.shift();
-    fetch(API + job.key, { cache: 'no-store' })
+    var opt = { cache: 'no-store' };
+    if (window.AbortSignal && AbortSignal.timeout) opt.signal = AbortSignal.timeout(10000);
+    fetch(API + job.key, opt)
       .then(function (r) { if (r.status === 404) return { value: 0 }; return r.ok ? r.json() : null; })
       .then(function (j) { job.resolve(j && typeof j.value === 'number' ? j.value : null); })
       .catch(function () { job.resolve(null); })
@@ -134,17 +136,23 @@
       }).catch(function () { setN('stars', null); });
   }
 
+  var dayRows = [];
   function days() {
-    var tb = $('days'), rows = [], max = 1, left = 14;
+    var tb = $('days'), rows = dayRows, max = 1, left = 14, fails = 0;
     for (var i = 0; i < 14; i++) {
       var d = new Date(Date.now() - i * 864e5), key = ymd(d);
       var tr = document.createElement('tr');
       tr.innerHTML = '<td>' + d.toISOString().slice(8, 10) + '/' + d.toISOString().slice(5, 7) + (i === 0 ? ' (hoje)' : '') +
         '</td><td>…</td><td>…</td><td>…</td><td class="bar"><div class="bars"><span class="b1"></span><span class="b2"></span><span class="b3"></span></div></td>';
       tb.appendChild(tr);
-      rows.push({ tr: tr, vals: [0, 0, 0] });
-      (function (row, key) {
+      rows.push({ tr: tr, vals: [0, 0, 0], key: key, ok: false });
+      loadRow(rows[i]);
+    }
+    function loadRow(row) {
+      var key = row.key;
+      (function () {
         Promise.all([get('visits-' + key), get('visitors-' + key), get('solves-' + key)]).then(function (v) {
+          row.ok = v.every(function (x) { return x != null; }); if (!row.ok) fails++;
           row.vals = v.map(function (x) { return x || 0; });
           var td = row.tr.children;
           for (var c = 0; c < 3; c++) td[c + 1].textContent = v[c] == null ? '—' : nf.format(v[c]);
@@ -153,17 +161,23 @@
             var s = r.tr.querySelectorAll('.bars span');
             for (var c = 0; c < 3; c++) s[c].style.width = (r.vals[c] / max * 100) + '%';
           });
-          left--; $('status').textContent = left ? 'Carregando dias… faltam ' + left : 'Atualizado às ' + new Date().toLocaleTimeString('pt-BR');
+          left--;
+          $('status').textContent = left ? 'Carregando dias… faltam ' + left
+            : (fails ? 'O contador está lento: alguns números não vieram (—). Tento de novo sozinho em 2 min.' : 'Atualizado às ' + new Date().toLocaleTimeString('pt-BR'));
         });
-      })(rows[i], key);
+      })();
     }
+    window.__retryDays = function () {
+      var bad = rows.filter(function (r) { return !r.ok; }); if (!bad.length) return;
+      left = bad.length; fails = 0; bad.forEach(loadRow);
+    };
   }
 
   pollBeats();
   totals();
   days();
   setInterval(pollBeats, 10000);
-  setInterval(function () { today = ymd(new Date()); totals(); }, 120000);
+  setInterval(function () { today = ymd(new Date()); totals(); if (window.__retryDays) window.__retryDays(); }, 120000);
 })();
 </script>
 <style>.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }</style>
