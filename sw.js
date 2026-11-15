@@ -17,6 +17,7 @@ self.addEventListener('fetch', function (e) {
   var url = new URL(req.url), same = url.origin === self.location.origin;
   var font = /fonts\.(googleapis|gstatic)\.com$/.test(url.hostname);
   if (!same && !font) return;
+  if (same && /stats\.html$/.test(url.pathname)) return; // painel de numeros: sempre da rede
   if (req.mode === 'navigate' || (same && /\/(index\.html)?$/.test(url.pathname))) {
     // pagina: rede primeiro (pega atualizacao), cache se estiver offline
     e.respondWith(fetch(req).then(function (res) {

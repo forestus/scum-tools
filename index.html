@@ -284,6 +284,16 @@
   .site-foot { border-top: 1px solid var(--edge-soft); margin-top: 8px; padding-top: 12px; font-size: .85rem; color: var(--muted); line-height: 1.5; }
   .site-foot p { margin: 0 0 6px; }
   .site-foot a { color: var(--tan); }
+  .foot-social { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 10px; }
+  .soc-btn { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 14px; border: 1px solid var(--edge); border-radius: 999px;
+    background: transparent; color: var(--fg); font: inherit; font-size: .88rem; cursor: pointer; text-decoration: none; }
+  .site-foot a.soc-btn { color: var(--fg); }
+  .soc-btn:hover { border-color: var(--tan); }
+  .soc-ico { color: var(--tan); }
+  .soc-btn[aria-pressed="true"] { border-color: #e0605a; }
+  .soc-btn[aria-pressed="true"] .soc-ico { color: #ff7a73; }
+  .soc-n { color: var(--muted); font-variant-numeric: tabular-nums; }
+  .soc-n:empty { display: none; }
 
   /* janela do Pix */
   button.support-link { background: transparent; font-family: inherit; cursor: pointer; }
@@ -413,6 +423,10 @@
   </main>
 
   <footer class="site-foot">
+    <div class="foot-social">
+      <button class="soc-btn" id="like-btn" type="button" aria-pressed="false"><span class="soc-ico" aria-hidden="true">♥</span> <span id="like-label" data-i18n="soc.like">Curtir</span> <span class="soc-n" id="like-n"></span></button>
+      <a class="soc-btn" id="star-link" href="https://github.com/forestus/scum-tools" target="_blank" rel="noopener"><span class="soc-ico" aria-hidden="true">★</span> <span data-i18n="soc.star">Estrela no GitHub</span> <span class="soc-n" id="star-n"></span></a>
+    </div>
     <p data-i18n="foot.1">Ferramenta de fã, gratuita e sem relação com os desenvolvedores ou a distribuidora do SCUM. SCUM e as imagens do jogo pertencem aos seus donos.</p>
     <p data-i18n="foot.2">A página só lê o print que você cola, aqui mesmo no seu navegador: a imagem não é enviada para nenhum servidor e nada no jogo é alterado. Você continua ligando os interruptores com as suas mãos.</p>
     <p data-i18n-html="foot.3">© 2026 Guilherme Maciel. Todos os direitos reservados. Você pode usar o site e ver o código, mas copiar ou republicar só com autorização. <a href="https://github.com/forestus/scum-tools">Código e licença no GitHub</a></p>
@@ -496,7 +510,8 @@ window.I18N = {
     'pix.fallback': 'Selecionei o código: aperte Ctrl+C para copiar.', 'pix.close': 'Fechar', 'pix.qr': 'QR code do Pix para doação',
     'foot.1': 'Ferramenta de fã, gratuita e sem relação com os desenvolvedores ou a distribuidora do SCUM. SCUM e as imagens do jogo pertencem aos seus donos.',
     'foot.2': 'A página só lê o print que você cola, aqui mesmo no seu navegador: a imagem não é enviada para nenhum servidor e nada no jogo é alterado. Você continua ligando os interruptores com as suas mãos.',
-    'foot.3': '© 2026 Guilherme Maciel. Todos os direitos reservados. Você pode usar o site e ver o código, mas copiar ou republicar só com autorização. <a href="https://github.com/forestus/scum-tools">Código e licença no GitHub</a>'
+    'foot.3': '© 2026 Guilherme Maciel. Todos os direitos reservados. Você pode usar o site e ver o código, mas copiar ou republicar só com autorização. <a href="https://github.com/forestus/scum-tools">Código e licença no GitHub</a>',
+    'soc.like': 'Curtir', 'soc.liked': 'Curtido', 'soc.star': 'Estrela no GitHub'
   },
   'en': {
     _name: 'English',
@@ -550,7 +565,8 @@ window.I18N = {
     'pix.fallback': 'I selected the code: press Ctrl+C to copy.', 'pix.close': 'Close', 'pix.qr': 'Pix QR code for donations',
     'foot.1': 'Free fan-made tool, not affiliated with SCUM\'s developers or publisher. SCUM and the game\'s images belong to their owners.',
     'foot.2': 'The page only reads the screenshot you paste, right here in your browser: the image is not sent to any server and nothing in the game is changed. You still flip the switches yourself.',
-    'foot.3': '© 2026 Guilherme Maciel. All rights reserved. You can use the site and read the code, but copying or republishing it requires permission. <a href="https://github.com/forestus/scum-tools">Code and license on GitHub</a>'
+    'foot.3': '© 2026 Guilherme Maciel. All rights reserved. You can use the site and read the code, but copying or republishing it requires permission. <a href="https://github.com/forestus/scum-tools">Code and license on GitHub</a>',
+    'soc.like': 'Like', 'soc.liked': 'Liked', 'soc.star': 'Star on GitHub'
   },
   'de': {
     _name: 'Deutsch',
@@ -604,7 +620,8 @@ window.I18N = {
     'pix.fallback': 'Code markiert: Strg+C zum Kopieren drücken.', 'pix.close': 'Schließen', 'pix.qr': 'Pix-QR-Code für Spenden',
     'foot.1': 'Kostenloses Fan-Tool, ohne Verbindung zu den Entwicklern oder dem Publisher von SCUM. SCUM und die Spielbilder gehören ihren Eigentümern.',
     'foot.2': 'Die Seite liest nur den Screenshot, den du einfügst, direkt in deinem Browser: Das Bild wird an keinen Server geschickt und im Spiel wird nichts verändert. Die Schalter legst du weiterhin selbst um.',
-    'foot.3': '© 2026 Guilherme Maciel. Alle Rechte vorbehalten. Du darfst die Seite nutzen und den Code ansehen, aber Kopieren oder Neuveröffentlichen nur mit Erlaubnis. <a href="https://github.com/forestus/scum-tools">Code und Lizenz auf GitHub</a>'
+    'foot.3': '© 2026 Guilherme Maciel. Alle Rechte vorbehalten. Du darfst die Seite nutzen und den Code ansehen, aber Kopieren oder Neuveröffentlichen nur mit Erlaubnis. <a href="https://github.com/forestus/scum-tools">Code und Lizenz auf GitHub</a>',
+    'soc.like': 'Gefällt mir', 'soc.liked': 'Gefällt dir', 'soc.star': 'Stern auf GitHub'
   },
   'ru': {
     _name: 'Русский',
@@ -658,7 +675,8 @@ window.I18N = {
     'pix.fallback': 'Код выделен: нажмите Ctrl+C, чтобы скопировать.', 'pix.close': 'Закрыть', 'pix.qr': 'QR-код Pix для пожертвований',
     'foot.1': 'Бесплатный фанатский инструмент, не связан с разработчиками или издателем SCUM. SCUM и изображения игры принадлежат их владельцам.',
     'foot.2': 'Страница только читает вставленный скриншот прямо в вашем браузере: изображение никуда не отправляется, и в игре ничего не меняется. Переключатели вы по-прежнему включаете сами.',
-    'foot.3': '© 2026 Guilherme Maciel. Все права защищены. Сайтом можно пользоваться и смотреть код, но копировать или публиковать его можно только с разрешения. <a href="https://github.com/forestus/scum-tools">Код и лицензия на GitHub</a>'
+    'foot.3': '© 2026 Guilherme Maciel. Все права защищены. Сайтом можно пользоваться и смотреть код, но копировать или публиковать его можно только с разрешения. <a href="https://github.com/forestus/scum-tools">Код и лицензия на GitHub</a>',
+    'soc.like': 'Нравится', 'soc.liked': 'Вам нравится', 'soc.star': 'Звезда на GitHub'
   },
   'pl': {
     _name: 'Polski',
@@ -712,7 +730,8 @@ window.I18N = {
     'pix.fallback': 'Zaznaczyłem kod: naciśnij Ctrl+C, aby skopiować.', 'pix.close': 'Zamknij', 'pix.qr': 'Kod QR Pix do darowizn',
     'foot.1': 'Darmowe narzędzie fanowskie, niezwiązane z twórcami ani wydawcą SCUM. SCUM i obrazy z gry należą do ich właścicieli.',
     'foot.2': 'Strona tylko odczytuje wklejony zrzut, w Twojej przeglądarce: obraz nie jest wysyłany na żaden serwer i nic w grze nie jest zmieniane. Przełączniki nadal przełączasz sam.',
-    'foot.3': '© 2026 Guilherme Maciel. Wszelkie prawa zastrzeżone. Możesz korzystać ze strony i oglądać kod, ale kopiowanie lub ponowna publikacja wymaga zgody. <a href="https://github.com/forestus/scum-tools">Kod i licencja na GitHubie</a>'
+    'foot.3': '© 2026 Guilherme Maciel. Wszelkie prawa zastrzeżone. Możesz korzystać ze strony i oglądać kod, ale kopiowanie lub ponowna publikacja wymaga zgody. <a href="https://github.com/forestus/scum-tools">Kod i licencja na GitHubie</a>',
+    'soc.like': 'Lubię to', 'soc.liked': 'Polubione', 'soc.star': 'Gwiazdka na GitHubie'
   },
   'fr': {
     _name: 'Français',
@@ -766,7 +785,8 @@ window.I18N = {
     'pix.fallback': 'Code sélectionné : appuyez sur Ctrl+C pour copier.', 'pix.close': 'Fermer', 'pix.qr': 'QR code Pix pour les dons',
     'foot.1': 'Outil de fan gratuit, sans lien avec les développeurs ou l\'éditeur de SCUM. SCUM et les images du jeu appartiennent à leurs propriétaires.',
     'foot.2': 'La page lit seulement la capture que vous collez, ici dans votre navigateur : l\'image n\'est envoyée à aucun serveur et rien n\'est modifié dans le jeu. C\'est toujours vous qui actionnez les interrupteurs.',
-    'foot.3': '© 2026 Guilherme Maciel. Tous droits réservés. Vous pouvez utiliser le site et consulter le code, mais toute copie ou republication nécessite une autorisation. <a href="https://github.com/forestus/scum-tools">Code et licence sur GitHub</a>'
+    'foot.3': '© 2026 Guilherme Maciel. Tous droits réservés. Vous pouvez utiliser le site et consulter le code, mais toute copie ou republication nécessite une autorisation. <a href="https://github.com/forestus/scum-tools">Code et licence sur GitHub</a>',
+    'soc.like': 'J\'aime', 'soc.liked': 'Aimé', 'soc.star': 'Étoile sur GitHub'
   },
   'es': {
     _name: 'Español',
@@ -820,7 +840,8 @@ window.I18N = {
     'pix.fallback': 'Seleccioné el código: pulsa Ctrl+C para copiar.', 'pix.close': 'Cerrar', 'pix.qr': 'Código QR de Pix para donaciones',
     'foot.1': 'Herramienta de fan, gratuita y sin relación con los desarrolladores ni la distribuidora de SCUM. SCUM y las imágenes del juego pertenecen a sus dueños.',
     'foot.2': 'La página solo lee la captura que pegas, aquí mismo en tu navegador: la imagen no se envía a ningún servidor y no se cambia nada en el juego. Los interruptores los sigues accionando tú.',
-    'foot.3': '© 2026 Guilherme Maciel. Todos los derechos reservados. Puedes usar el sitio y ver el código, pero copiarlo o republicarlo requiere autorización. <a href="https://github.com/forestus/scum-tools">Código y licencia en GitHub</a>'
+    'foot.3': '© 2026 Guilherme Maciel. Todos los derechos reservados. Puedes usar el sitio y ver el código, pero copiarlo o republicarlo requiere autorización. <a href="https://github.com/forestus/scum-tools">Código y licencia en GitHub</a>',
+    'soc.like': 'Me gusta', 'soc.liked': 'Te gusta', 'soc.star': 'Estrella en GitHub'
   },
   'zh-CN': {
     _name: '简体中文',
@@ -874,7 +895,8 @@ window.I18N = {
     'pix.fallback': '已选中代码：按 Ctrl+C 复制。', 'pix.close': '关闭', 'pix.qr': '用于捐赠的 Pix 二维码',
     'foot.1': '免费的粉丝工具，与 SCUM 的开发商或发行商无关。SCUM 及游戏图片归其所有者所有。',
     'foot.2': '页面只在你的浏览器里读取你粘贴的截图：图片不会发送到任何服务器，游戏中的任何内容都不会被修改。开关仍由你亲手操作。',
-    'foot.3': '© 2026 Guilherme Maciel。保留所有权利。你可以使用本网站并查看代码，但复制或重新发布需获得授权。<a href="https://github.com/forestus/scum-tools">GitHub 上的代码和许可</a>'
+    'foot.3': '© 2026 Guilherme Maciel。保留所有权利。你可以使用本网站并查看代码，但复制或重新发布需获得授权。<a href="https://github.com/forestus/scum-tools">GitHub 上的代码和许可</a>',
+    'soc.like': '点赞', 'soc.liked': '已点赞', 'soc.star': '在 GitHub 上加星'
   },
   'zh-TW': {
     _name: '繁體中文',
@@ -928,7 +950,8 @@ window.I18N = {
     'pix.fallback': '已選取代碼：按 Ctrl+C 複製。', 'pix.close': '關閉', 'pix.qr': '用於捐贈的 Pix QR 碼',
     'foot.1': '免費的粉絲工具，與 SCUM 的開發商或發行商無關。SCUM 及遊戲圖片歸其所有者所有。',
     'foot.2': '頁面只在你的瀏覽器裡讀取你貼上的截圖：圖片不會傳送到任何伺服器，遊戲中的任何內容都不會被修改。開關仍由你親手操作。',
-    'foot.3': '© 2026 Guilherme Maciel。保留所有權利。你可以使用本網站並查看程式碼，但複製或重新發布需獲得授權。<a href="https://github.com/forestus/scum-tools">GitHub 上的程式碼和授權</a>'
+    'foot.3': '© 2026 Guilherme Maciel。保留所有權利。你可以使用本網站並查看程式碼，但複製或重新發布需獲得授權。<a href="https://github.com/forestus/scum-tools">GitHub 上的程式碼和授權</a>',
+    'soc.like': '按讚', 'soc.liked': '已按讚', 'soc.star': '在 GitHub 上加星'
   },
   'th': {
     _name: 'ไทย',
@@ -982,7 +1005,8 @@ window.I18N = {
     'pix.fallback': 'เลือกรหัสแล้ว: กด Ctrl+C เพื่อคัดลอก', 'pix.close': 'ปิด', 'pix.qr': 'QR code ของ Pix สำหรับบริจาค',
     'foot.1': 'เครื่องมือของแฟนเกม ใช้ฟรี ไม่เกี่ยวข้องกับผู้พัฒนาหรือผู้จัดจำหน่าย SCUM ชื่อ SCUM และภาพจากเกมเป็นของเจ้าของ',
     'foot.2': 'หน้านี้อ่านเฉพาะภาพหน้าจอที่คุณวาง ในเบราว์เซอร์ของคุณเท่านั้น: รูปภาพไม่ถูกส่งไปเซิร์ฟเวอร์ใด และไม่มีอะไรในเกมถูกเปลี่ยน คุณยังเป็นคนกดสวิตช์เอง',
-    'foot.3': '© 2026 Guilherme Maciel สงวนลิขสิทธิ์ คุณใช้เว็บไซต์และดูโค้ดได้ แต่การคัดลอกหรือเผยแพร่ซ้ำต้องได้รับอนุญาต <a href="https://github.com/forestus/scum-tools">โค้ดและสัญญาอนุญาตบน GitHub</a>'
+    'foot.3': '© 2026 Guilherme Maciel สงวนลิขสิทธิ์ คุณใช้เว็บไซต์และดูโค้ดได้ แต่การคัดลอกหรือเผยแพร่ซ้ำต้องได้รับอนุญาต <a href="https://github.com/forestus/scum-tools">โค้ดและสัญญาอนุญาตบน GitHub</a>',
+    'soc.like': 'ถูกใจ', 'soc.liked': 'ถูกใจแล้ว', 'soc.star': 'ให้ดาวบน GitHub'
   }
 };
 
@@ -2156,6 +2180,7 @@ window.BUNKER_EXAMPLE_IMG = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/
       : '<span class="chip warn">' + t('chip.round') + '</span>';
     setAnswer('good', t('ans.okKicker'), big,
       t('ans.meta', { a: '<span class="lcd-inline" id="disp-a">' + fmt(res.displayA) + '</span>', b: '<span class="lcd-inline" id="disp-b">' + fmt(res.displayB) + '</span>', chip: chip }));
+    if (window.ScumStats) ScumStats.solved([input, a, b, JSON.stringify(rows), res.switches.join(',')].join('|'));
   }
 
 
@@ -2492,6 +2517,7 @@ window.BUNKER_EXAMPLE_IMG = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/
     });
     setNote(source === 'claude' ? 'note.claude' : source === 'photo' ? 'note.photo' : 'note.print');
     solve();
+    if (window.ScumStats) ScumStats.read(source);
     var nU = Object.keys(unsure).length, numU = (res.unsure || []).filter(function (u) { return !/linha/.test(u); });
     if (!lastRes || !lastRes.ok) setStatus('st.noCombo', 'bad');
     else if (nU || numU.length) setStatus(nU ? 'st.checkCells' : 'st.checkNums', 'warn', { n: nU });
@@ -2710,6 +2736,93 @@ if ('serviceWorker' in navigator && location.protocol === 'https:' && /github\.i
     if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(code).then(done, fallback); else fallback();
   });
   input.addEventListener('focus', function () { input.select(); });
+})();
+</script>
+<script>
+/* Contadores anonimos: so somam numeros (visitas, paineis resolvidos, curtidas) num contador
+   publico gratis (abacus.jasoncameron.dev). Nada de cookies, nome, IP guardado por nos ou o print.
+   O painel com os numeros fica em stats.html. Roda depois que a pagina carrega e nunca trava nada. */
+(function () {
+  'use strict';
+  var API = 'https://abacus.jasoncameron.dev/', NS = 'forestus-scum-tools/';
+  var LIVE = location.hostname === 'forestus.github.io'; // fora do site publicado (testes, arquivo local) nao conta
+  function day() { return new Date().toISOString().slice(0, 10).replace(/-/g, ''); } // dia em UTC
+  function call(path) {
+    if (!LIVE) return Promise.resolve(null);
+    try {
+      return fetch(API + path, { cache: 'no-store', keepalive: true })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (j) { return j && typeof j.value === 'number' ? j.value : null; })
+        .catch(function () { return null; });
+    } catch (e) { return Promise.resolve(null); }
+  }
+  function hit(k) { return call('hit/' + NS + k); }
+  function get(k) { return call('get/' + NS + k); }
+  function count(k) { var p = hit(k); hit(k + '-' + day()); return p; } // total + dia
+  function store(kind, k, v) { try { var s = window[kind]; if (v === undefined) return s.getItem(k); s.setItem(k, v); } catch (e) { return null; } }
+  function fmtN(n) { try { return new Intl.NumberFormat(window.LANG).format(n); } catch (e) { return String(n); } }
+
+  // so conta painel resolvido depois de a pessoa mexer (o exemplo que abre sozinho nao conta)
+  var acted = false;
+  ['paste', 'drop', 'input', 'change'].forEach(function (ev) { document.addEventListener(ev, function () { acted = true; }, true); });
+  document.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('.cell, .op, #custom-ok, .sign')) acted = true; }, true);
+  var seen = {}, pending = null;
+  window.ScumStats = {
+    solved: function (sig) {
+      if (!acted) return;
+      clearTimeout(pending);
+      pending = setTimeout(function () { // espera a resposta parar de mudar
+        if (seen[sig]) return; seen[sig] = 1; count('solves');
+      }, 2500);
+    },
+    read: function (source) { count(source === 'claude' ? 'reads-claude' : 'reads'); }
+  };
+
+  // curtir: 1 por navegador
+  var likeBtn = document.getElementById('like-btn'), likeN = document.getElementById('like-n'), likeLabel = document.getElementById('like-label');
+  function paintLike(liked, n) {
+    likeBtn.setAttribute('aria-pressed', liked ? 'true' : 'false');
+    likeLabel.setAttribute('data-i18n', liked ? 'soc.liked' : 'soc.like');
+    likeLabel.textContent = t(liked ? 'soc.liked' : 'soc.like');
+    if (typeof n === 'number') { likeBtn.dataset.n = n; likeN.textContent = fmtN(n); }
+  }
+  paintLike(store('localStorage', 'scum-tools-liked') === '1');
+  likeBtn.addEventListener('click', function () {
+    if (store('localStorage', 'scum-tools-liked') === '1') return;
+    store('localStorage', 'scum-tools-liked', '1');
+    var guess = (+likeBtn.dataset.n || 0) + 1;
+    paintLike(true, LIVE ? guess : undefined);
+    hit('likes').then(function (v) { if (v !== null) paintLike(true, v); });
+    hit('likes-' + day());
+  });
+
+  var prevLang = window.onLangChange;
+  window.onLangChange = function () {
+    if (typeof prevLang === 'function') prevLang();
+    if (likeBtn.dataset.n) likeN.textContent = fmtN(+likeBtn.dataset.n);
+    var sn = document.getElementById('star-n'); if (sn.dataset.n) sn.textContent = fmtN(+sn.dataset.n);
+  };
+
+  function start() {
+    if (!LIVE) return;
+    if (!store('sessionStorage', 'scum-tools-v')) { store('sessionStorage', 'scum-tools-v', '1'); count('visits'); }
+    if (!store('localStorage', 'scum-tools-u')) { store('localStorage', 'scum-tools-u', '1'); count('visitors'); }
+    get('likes').then(function (v) { paintLike(store('localStorage', 'scum-tools-liked') === '1', v === null ? 0 : v); });
+    // estrelas do repositorio (guardadas por 1 hora para nao gastar o limite da API do GitHub)
+    var sn = document.getElementById('star-n');
+    function showStars(n) { sn.dataset.n = n; sn.textContent = fmtN(n); }
+    var cached = null; try { cached = JSON.parse(store('localStorage', 'scum-tools-stars') || 'null'); } catch (e) {}
+    if (cached && Date.now() - cached.t < 3600e3) showStars(cached.n);
+    else fetch('https://api.github.com/repos/forestus/scum-tools', { cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) { if (j && typeof j.stargazers_count === 'number') { showStars(j.stargazers_count); store('localStorage', 'scum-tools-stars', JSON.stringify({ n: j.stargazers_count, t: Date.now() })); } })
+      .catch(function () {});
+    // "online agora": cada aba aberta e visivel soma 1 a cada 30 s
+    function beat() { if (document.visibilityState === 'visible') hit('beats'); }
+    beat(); setInterval(beat, 30000);
+  }
+  if (document.readyState === 'complete') setTimeout(start, 1500);
+  else window.addEventListener('load', function () { setTimeout(start, 1500); });
 })();
 </script>
 </body>
