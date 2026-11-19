@@ -32,24 +32,26 @@
   td.bar { width: 45%; text-align: left; }
   .bars { display: flex; flex-direction: column; gap: 2px; }
   .bars span { display: block; height: 5px; border-radius: 3px; }
-  .b1 { background: var(--bar); } .b2 { background: var(--bar2); } .b3 { background: var(--bar3); }
+  .b1 { background: var(--bar); } .b3 { background: var(--bar3); }
   .legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: .82rem; color: var(--muted); margin: 0 0 6px; }
   .legend i { display: inline-block; width: 12px; height: 5px; border-radius: 3px; margin-right: 5px; vertical-align: middle; }
   .notes { margin-top: 26px; font-size: .85rem; color: var(--muted); }
   .notes li { margin-bottom: 4px; }
   .notes a { color: var(--tan); }
+  .btn { display: inline-block; margin: 4px 0 14px; padding: 8px 14px; border: 1px solid var(--tan); border-radius: 8px; color: var(--tan); text-decoration: none; font-weight: 600; }
+  .btn:hover { background: var(--plate); }
+  .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   #status { font-size: .82rem; color: var(--muted); min-height: 1.2em; margin: 10px 0 0; }
 </style>
 </head>
 <body>
 <main>
   <h1>Hack do Bunker · estatísticas</h1>
-  <p class="sub">Números do <a href="./">site</a> em tempo real. Esta página não aparece no Google e não tem link no site.</p>
+  <p class="sub">Resumo dos números do <a href="./">site</a>. Esta página não aparece no Google e não tem link no site.</p>
+  <a class="btn" href="https://forestus.goatcounter.com" target="_blank" rel="noopener">Abrir painel completo no GoatCounter →</a>
 
   <div class="grid">
-    <div class="card live"><div class="k"><span class="dot" aria-hidden="true"></span>Online agora</div><div class="v" id="online">…</div><div class="d" id="online-d">medindo (30 s)</div></div>
     <div class="card"><div class="k">Visitas</div><div class="v" id="visits">…</div><div class="d" id="visits-d"></div></div>
-    <div class="card"><div class="k">Pessoas diferentes</div><div class="v" id="visitors">…</div><div class="d" id="visitors-d"></div></div>
     <div class="card"><div class="k">Painéis resolvidos</div><div class="v" id="solves">…</div><div class="d" id="solves-d"></div></div>
     <div class="card"><div class="k">Prints / fotos lidos</div><div class="v" id="reads">…</div><div class="d" id="reads-d"></div></div>
     <div class="card"><div class="k">Curtidas ♥</div><div class="v" id="likes">…</div><div class="d" id="likes-d"></div></div>
@@ -57,129 +59,85 @@
   </div>
 
   <h2>Últimos 14 dias</h2>
-  <p class="legend"><span><i class="b1"></i>Visitas</span><span><i class="b2"></i>Pessoas novas</span><span><i class="b3"></i>Painéis resolvidos</span></p>
+  <p class="legend"><span><i class="b1"></i>Visitas</span><span><i class="b3"></i>Painéis resolvidos</span></p>
   <table>
-    <thead><tr><th scope="col">Dia</th><th scope="col">Visitas</th><th scope="col">Novas</th><th scope="col">Resolvidos</th><th scope="col" class="bar"><span class="visually-hidden">Gráfico</span></th></tr></thead>
+    <thead><tr><th scope="col">Dia</th><th scope="col">Visitas</th><th scope="col">Resolvidos</th><th scope="col" class="bar"><span class="visually-hidden">Gráfico</span></th></tr></thead>
     <tbody id="days"></tbody>
   </table>
   <p id="status" role="status"></p>
 
   <ul class="notes">
-    <li><b>Visita</b> = cada vez que alguém abre o site (recarregar na mesma aba não conta de novo). <b>Pessoas diferentes</b> = navegadores que abriram o site pela primeira vez.</li>
-    <li><b>Online agora</b> = abas com o site aberto e visível nos últimos 30 segundos (atualiza sozinho).</li>
-    <li><b>Painel resolvido</b> = a pessoa colou um print ou digitou os números e recebeu a resposta (o exemplo que abre sozinho não conta).</li>
+    <li>Os números vêm do <b>GoatCounter</b> (gratuito, sem cookies). Esta página pode mostrar valores com <b>até 4 horas de atraso</b>; o painel completo é em tempo real e mostra também de onde vieram as visitas (Discord, YouTube, Google…), país e celular ou PC.</li>
+    <li><b>Visita</b> = cada vez que alguém abre o site. <b>Painel resolvido</b> = a pessoa colou um print ou digitou os números e recebeu a resposta (o exemplo que abre sozinho não conta).</li>
     <li>Os dias seguem o horário UTC: o dia vira às 21h de Brasília.</li>
-    <li>É um contador simples e público, sem cadastro: os números são uma boa ideia de uso, não uma auditoria. Bloqueadores de anúncio podem deixar de contar algumas visitas.</li>
+    <li>Contagem a partir de 19/11/2026 (antes era outro contador). Bloqueadores de anúncio podem deixar de contar algumas visitas.</li>
     <li>Visitas na página do repositório (não do site) ficam no GitHub, em <a href="https://github.com/forestus/scum-tools/graphs/traffic">Insights › Traffic</a> (só você vê).</li>
   </ul>
 </main>
 <script>
 (function () {
   'use strict';
-  var API = 'https://abacus.jasoncameron.dev/get/forestus-scum-tools/';
+  var GC = 'https://forestus.goatcounter.com/counter/';
   var nf = new Intl.NumberFormat('pt-BR');
   function $(id) { return document.getElementById(id); }
   function setN(id, n) { $(id).textContent = n == null ? '—' : nf.format(n); }
+  function iso(d) { return d.toISOString().slice(0, 10); }
 
-  // fila: no maximo ~2,5 pedidos por segundo (o contador aceita 30 a cada 10 s)
-  var queue = [], busy = false;
-  function get(key, first) {
-    return new Promise(function (resolve) { queue[first ? 'unshift' : 'push']({ key: key, resolve: resolve }); pump(); });
+  // total de um caminho/evento; 404 = ainda nao aconteceu = 0
+  function get(path, start, end) {
+    var q = start ? '?start=' + start + '&end=' + end : '';
+    var opt = {}; if (window.AbortSignal && AbortSignal.timeout) opt.signal = AbortSignal.timeout(10000);
+    return fetch(GC + encodeURIComponent(path) + '.json' + q, opt)
+      .then(function (r) { return r.status === 404 ? { count: '0' } : (r.ok ? r.json() : null); })
+      .then(function (j) { if (!j || j.count == null) return null; var n = parseInt(String(j.count).replace(/\D/g, ''), 10); return isNaN(n) ? null : n; })
+      .catch(function () { return null; });
   }
-  function pump() {
-    if (busy || !queue.length) return;
-    busy = true;
-    var job = queue.shift();
-    var opt = { cache: 'no-store' };
-    if (window.AbortSignal && AbortSignal.timeout) opt.signal = AbortSignal.timeout(10000);
-    fetch(API + job.key, opt)
-      .then(function (r) { if (r.status === 404) return { value: 0 }; return r.ok ? r.json() : null; })
-      .then(function (j) { job.resolve(j && typeof j.value === 'number' ? j.value : null); })
-      .catch(function () { job.resolve(null); })
-      .then(function () { setTimeout(function () { busy = false; pump(); }, 400); });
+  function sum(a, b) { return a == null && b == null ? null : (a || 0) + (b || 0); }
+
+  var today = new Date(), t0 = iso(today);
+  get('TOTAL').then(function (v) { setN('visits', v); });
+  get('TOTAL', t0, t0).then(function (v) { $('visits-d').textContent = v == null ? '' : 'hoje: ' + nf.format(v); });
+  get('painel-resolvido').then(function (v) { setN('solves', v); });
+  get('painel-resolvido', t0, t0).then(function (v) { $('solves-d').textContent = v == null ? '' : 'hoje: ' + nf.format(v); });
+  Promise.all([get('print-lido'), get('print-lido-claude')]).then(function (r) {
+    setN('reads', sum(r[0], r[1]));
+    if (r[1]) $('reads-d').textContent = 'pela leitura extra: ' + nf.format(r[1]);
+  });
+  get('curtida').then(function (v) { setN('likes', v); });
+  fetch('https://api.github.com/repos/forestus/scum-tools', { cache: 'no-store' })
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (j) {
+      if (!j) { setN('stars', null); return; }
+      setN('stars', j.stargazers_count);
+      $('stars-d').textContent = nf.format(j.forks_count) + ' forks · ' + nf.format(j.subscribers_count || 0) + ' acompanhando';
+    }).catch(function () { setN('stars', null); });
+
+  // ultimos 14 dias
+  var days = [], tb = $('days');
+  for (var i = 0; i < 14; i++) {
+    var d = new Date(today.getTime() - i * 864e5), key = iso(d);
+    var tr = document.createElement('tr');
+    tr.innerHTML = '<td>' + key.slice(8, 10) + '/' + key.slice(5, 7) + (i === 0 ? ' (hoje)' : '') + '</td><td>…</td><td>…</td><td class="bar"><div class="bars"><span class="b1" style="width:0"></span><span class="b3" style="width:0"></span></div></td>';
+    tb.appendChild(tr);
+    days.push({ key: key, tr: tr });
   }
-
-  function ymd(d) { return d.toISOString().slice(0, 10).replace(/-/g, ''); }
-  var today = ymd(new Date());
-
-  // online agora: soma de "batidas" (cada aba visivel bate 1 vez a cada 30 s)
-  var samples = [];
-  function pollBeats() {
-    get('beats', true).then(function (v) {
-      if (v == null) return;
-      var now = Date.now(); samples.push({ t: now, v: v });
-      while (samples.length > 2 && now - samples[1].t >= 30000) samples.shift();
-      var old = samples[0];
-      if (now - old.t >= 29000) {
-        var n = Math.max(0, Math.round((v - old.v) * 30000 / (now - old.t)));
-        setN('online', n);
-        $('online-d').textContent = n === 1 ? '1 aba aberta' : nf.format(n) + ' abas abertas';
-      }
+  $('status').textContent = 'carregando os dias…';
+  Promise.all(days.map(function (x) {
+    return Promise.all([get('TOTAL', x.key, x.key), get('painel-resolvido', x.key, x.key)]).then(function (r) { x.v = r[0]; x.s = r[1]; });
+  })).then(function () {
+    var max = 1; days.forEach(function (x) { max = Math.max(max, x.v || 0, x.s || 0); });
+    days.forEach(function (x) {
+      var td = x.tr.children;
+      td[1].textContent = x.v == null ? '—' : nf.format(x.v);
+      td[2].textContent = x.s == null ? '—' : nf.format(x.s);
+      var sp = x.tr.querySelectorAll('.bars span');
+      sp[0].style.width = ((x.v || 0) / max * 100) + '%';
+      sp[1].style.width = ((x.s || 0) / max * 100) + '%';
     });
-  }
-
-  function totals() {
-    [['visits', 'visits'], ['visitors', 'visitors'], ['solves', 'solves'], ['likes', 'likes']].forEach(function (p) {
-      get(p[1]).then(function (v) { setN(p[0], v); });
-      get(p[1] + '-' + today).then(function (v) { if (v != null) $(p[0] + '-d').textContent = 'hoje: ' + nf.format(v); });
-    });
-    Promise.all([get('reads'), get('reads-claude')]).then(function (r) {
-      setN('reads', r[0] == null && r[1] == null ? null : (r[0] || 0) + (r[1] || 0));
-      if (r[1]) $('reads-d').textContent = nf.format(r[1]) + ' pelo Claude';
-    });
-    fetch('https://api.github.com/repos/forestus/scum-tools', { cache: 'no-store' })
-      .then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (j) {
-        if (!j) return setN('stars', null);
-        setN('stars', j.stargazers_count);
-        $('stars-d').textContent = nf.format(j.forks_count) + ' forks · ' + nf.format(j.subscribers_count || 0) + ' acompanhando';
-      }).catch(function () { setN('stars', null); });
-  }
-
-  var dayRows = [];
-  function days() {
-    var tb = $('days'), rows = dayRows, max = 1, left = 14, fails = 0;
-    for (var i = 0; i < 14; i++) {
-      var d = new Date(Date.now() - i * 864e5), key = ymd(d);
-      var tr = document.createElement('tr');
-      tr.innerHTML = '<td>' + d.toISOString().slice(8, 10) + '/' + d.toISOString().slice(5, 7) + (i === 0 ? ' (hoje)' : '') +
-        '</td><td>…</td><td>…</td><td>…</td><td class="bar"><div class="bars"><span class="b1"></span><span class="b2"></span><span class="b3"></span></div></td>';
-      tb.appendChild(tr);
-      rows.push({ tr: tr, vals: [0, 0, 0], key: key, ok: false });
-      loadRow(rows[i]);
-    }
-    function loadRow(row) {
-      var key = row.key;
-      (function () {
-        Promise.all([get('visits-' + key), get('visitors-' + key), get('solves-' + key)]).then(function (v) {
-          row.ok = v.every(function (x) { return x != null; }); if (!row.ok) fails++;
-          row.vals = v.map(function (x) { return x || 0; });
-          var td = row.tr.children;
-          for (var c = 0; c < 3; c++) td[c + 1].textContent = v[c] == null ? '—' : nf.format(v[c]);
-          max = Math.max(max, row.vals[0], row.vals[1], row.vals[2]);
-          rows.forEach(function (r) {
-            var s = r.tr.querySelectorAll('.bars span');
-            for (var c = 0; c < 3; c++) s[c].style.width = (r.vals[c] / max * 100) + '%';
-          });
-          left--;
-          $('status').textContent = left ? 'Carregando dias… faltam ' + left
-            : (fails ? 'O contador está lento: alguns números não vieram (—). Tento de novo sozinho em 2 min.' : 'Atualizado às ' + new Date().toLocaleTimeString('pt-BR'));
-        });
-      })();
-    }
-    window.__retryDays = function () {
-      var bad = rows.filter(function (r) { return !r.ok; }); if (!bad.length) return;
-      left = bad.length; fails = 0; bad.forEach(loadRow);
-    };
-  }
-
-  pollBeats();
-  totals();
-  days();
-  setInterval(pollBeats, 10000);
-  setInterval(function () { today = ymd(new Date()); totals(); if (window.__retryDays) window.__retryDays(); }, 120000);
+    var fail = days.filter(function (x) { return x.v == null; }).length;
+    $('status').textContent = fail ? 'Alguns dias não carregaram; recarregue a página.' : '';
+  });
 })();
 </script>
-<style>.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }</style>
 </body>
 </html>
