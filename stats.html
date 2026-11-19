@@ -82,10 +82,14 @@
   function $(id) { return document.getElementById(id); }
   function setN(id, n) { $(id).textContent = n == null ? '—' : nf.format(n); }
   function iso(d) { return d.toISOString().slice(0, 10); }
+  var today = new Date(), t0 = iso(today);
 
   // total de um caminho/evento; 404 = ainda nao aconteceu = 0
+  // sempre com datas: sem datas o GoatCounter devolve um total guardado que demora a atualizar; o fim nao entra
+  var START = '2026-11-19'; // dia em que o GoatCounter entrou no site
+  function next(day) { return iso(new Date(Date.parse(day + 'T00:00:00Z') + 864e5)); }
   function get(path, start, end) {
-    var q = start ? '?start=' + start + '&end=' + end : '';
+    var q = '?start=' + (start || START) + '&end=' + next(end || t0);
     var opt = {}; if (window.AbortSignal && AbortSignal.timeout) opt.signal = AbortSignal.timeout(10000);
     return fetch(GC + encodeURIComponent(path) + '.json' + q, opt)
       .then(function (r) { return r.status === 404 ? { count: '0' } : (r.ok ? r.json() : null); })
@@ -94,9 +98,9 @@
   }
   function sum(a, b) { return a == null && b == null ? null : (a || 0) + (b || 0); }
 
-  var today = new Date(), t0 = iso(today);
-  get('TOTAL').then(function (v) { setN('visits', v); });
-  get('TOTAL', t0, t0).then(function (v) { $('visits-d').textContent = v == null ? '' : 'hoje: ' + nf.format(v); });
+  function visits(start, end) { return Promise.all([get('/scum-tools', start, end), get('/scum-tools/index.html', start, end)]).then(function (r) { return sum(r[0], r[1]); }); }
+  visits().then(function (v) { setN('visits', v); });
+  visits(t0, t0).then(function (v) { $('visits-d').textContent = v == null ? '' : 'hoje: ' + nf.format(v); });
   get('painel-resolvido').then(function (v) { setN('solves', v); });
   get('painel-resolvido', t0, t0).then(function (v) { $('solves-d').textContent = v == null ? '' : 'hoje: ' + nf.format(v); });
   Promise.all([get('print-lido'), get('print-lido-claude')]).then(function (r) {
@@ -123,7 +127,7 @@
   }
   $('status').textContent = 'carregando os dias…';
   Promise.all(days.map(function (x) {
-    return Promise.all([get('TOTAL', x.key, x.key), get('painel-resolvido', x.key, x.key)]).then(function (r) { x.v = r[0]; x.s = r[1]; });
+    return Promise.all([visits(x.key, x.key), get('painel-resolvido', x.key, x.key)]).then(function (r) { x.v = r[0]; x.s = r[1]; });
   })).then(function () {
     var max = 1; days.forEach(function (x) { max = Math.max(max, x.v || 0, x.s || 0); });
     days.forEach(function (x) {
