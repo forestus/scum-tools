@@ -2739,30 +2739,34 @@ if ('serviceWorker' in navigator && location.protocol === 'https:' && /github\.i
 })();
 </script>
 <script>
-/* Contadores anonimos: so somam numeros (visitas, paineis resolvidos, curtidas) num contador
-   publico gratis (abacus.jasoncameron.dev). Nada de cookies, nome, IP guardado por nos ou o print.
-   O painel com os numeros fica em stats.html. Roda depois que a pagina carrega e nunca trava nada. */
+/* Contadores anonimos via GoatCounter (gratis, sem cookies, sem guardar IP): visitas, paineis resolvidos,
+   prints lidos e curtidas. Os numeros ficam no painel do GoatCounter (link em stats.html).
+   Roda depois que a pagina carrega e nunca trava nada: se o servico falhar, o site segue normal. */
 (function () {
   'use strict';
-  var API = 'https://abacus.jasoncameron.dev/', NS = 'forestus-scum-tools/';
+  var GC = 'https://forestus.goatcounter.com';
   var LIVE = location.hostname === 'forestus.github.io'; // fora do site publicado (testes, arquivo local) nao conta
-  function day() { return new Date().toISOString().slice(0, 10).replace(/-/g, ''); } // dia em UTC
-  function call(path) {
-    if (!LIVE) return Promise.resolve(null);
-    try {
-      var opt = { cache: 'no-store', keepalive: true };
-      if (window.AbortSignal && AbortSignal.timeout) opt.signal = AbortSignal.timeout(8000); // servico lento: desiste e segue
-      return fetch(API + path, opt)
-        .then(function (r) { return r.ok ? r.json() : null; })
-        .then(function (j) { return j && typeof j.value === 'number' ? j.value : null; })
-        .catch(function () { return null; });
-    } catch (e) { return Promise.resolve(null); }
-  }
-  function hit(k) { return call('hit/' + NS + k); }
-  function get(k) { return call('get/' + NS + k); }
-  function count(k) { var p = hit(k); hit(k + '-' + day()); return p; } // total + dia
   function store(kind, k, v) { try { var s = window[kind]; if (v === undefined) return s.getItem(k); s.setItem(k, v); } catch (e) { return null; } }
   function fmtN(n) { try { return new Intl.NumberFormat(window.LANG).format(n); } catch (e) { return String(n); } }
+
+  // eventos: se o script do GoatCounter ainda nao carregou, guarda na fila e manda quando carregar
+  var queue = [];
+  function send(path, title) {
+    if (!LIVE) return;
+    if (window.goatcounter && window.goatcounter.count) {
+      try { window.goatcounter.count({ path: path, title: title, event: true }); } catch (e) {}
+    } else queue.push([path, title]);
+  }
+  function flush() { var q = queue; queue = []; q.forEach(function (x) { send(x[0], x[1]); }); }
+  // contador publico de um evento (precisa da opcao "Allow adding visitor counts" ligada no GoatCounter)
+  function total(path) {
+    if (!LIVE || !window.fetch) return Promise.resolve(null);
+    var opt = {}; if (window.AbortSignal && AbortSignal.timeout) opt.signal = AbortSignal.timeout(8000);
+    return fetch(GC + '/counter/' + encodeURIComponent(path) + '.json', opt)
+      .then(function (r) { return r.status === 404 ? { count: '0' } : (r.ok ? r.json() : null); })
+      .then(function (j) { if (!j || j.count == null) return null; var n = parseInt(String(j.count).replace(/\D/g, ''), 10); return isNaN(n) ? null : n; })
+      .catch(function () { return null; });
+  }
 
   // so conta painel resolvido depois de a pessoa mexer (o exemplo que abre sozinho nao conta)
   var acted = false;
@@ -2774,10 +2778,10 @@ if ('serviceWorker' in navigator && location.protocol === 'https:' && /github\.i
       if (!acted) return;
       clearTimeout(pending);
       pending = setTimeout(function () { // espera a resposta parar de mudar
-        if (seen[sig]) return; seen[sig] = 1; count('solves');
+        if (seen[sig]) return; seen[sig] = 1; send('painel-resolvido', 'Painel resolvido');
       }, 2500);
     },
-    read: function (source) { count(source === 'claude' ? 'reads-claude' : 'reads'); }
+    read: function (source) { if (source === 'claude') send('print-lido-claude', 'Print lido (Claude)'); else send('print-lido', 'Print lido'); }
   };
 
   // curtir: 1 por navegador
@@ -2792,10 +2796,8 @@ if ('serviceWorker' in navigator && location.protocol === 'https:' && /github\.i
   likeBtn.addEventListener('click', function () {
     if (store('localStorage', 'scum-tools-liked') === '1') return;
     store('localStorage', 'scum-tools-liked', '1');
-    var guess = (+likeBtn.dataset.n || 0) + 1;
-    paintLike(true, LIVE ? guess : undefined);
-    hit('likes').then(function (v) { if (v !== null) paintLike(true, v); });
-    hit('likes-' + day());
+    paintLike(true, LIVE ? (+likeBtn.dataset.n || 0) + 1 : undefined); // o contador publico demora a atualizar
+    send('curtida', 'Curtida');
   });
 
   var prevLang = window.onLangChange;
@@ -2807,9 +2809,17 @@ if ('serviceWorker' in navigator && location.protocol === 'https:' && /github\.i
 
   function start() {
     if (!LIVE) return;
-    if (!store('sessionStorage', 'scum-tools-v')) { store('sessionStorage', 'scum-tools-v', '1'); count('visits'); }
-    if (!store('localStorage', 'scum-tools-u')) { store('localStorage', 'scum-tools-u', '1'); count('visitors'); }
-    get('likes').then(function (v) { paintLike(store('localStorage', 'scum-tools-liked') === '1', v === null ? 0 : v); });
+    // visita: o proprio script do GoatCounter conta ao carregar
+    var sc = document.createElement('script');
+    sc.async = true; sc.src = 'https://gc.zgo.at/count.js';
+    sc.setAttribute('data-goatcounter', GC + '/count');
+    sc.onload = flush;
+    document.body.appendChild(sc);
+    total('curtida').then(function (v) {
+      if (v === null) return;
+      var liked = store('localStorage', 'scum-tools-liked') === '1';
+      paintLike(liked, Math.max(v, liked ? 1 : 0));
+    });
     // estrelas do repositorio (guardadas por 1 hora para nao gastar o limite da API do GitHub)
     var sn = document.getElementById('star-n');
     function showStars(n) { sn.dataset.n = n; sn.textContent = fmtN(n); }
@@ -2819,9 +2829,6 @@ if ('serviceWorker' in navigator && location.protocol === 'https:' && /github\.i
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (j) { if (j && typeof j.stargazers_count === 'number') { showStars(j.stargazers_count); store('localStorage', 'scum-tools-stars', JSON.stringify({ n: j.stargazers_count, t: Date.now() })); } })
       .catch(function () {});
-    // "online agora": cada aba aberta e visivel soma 1 a cada 30 s
-    function beat() { if (document.visibilityState === 'visible') hit('beats'); }
-    beat(); setInterval(beat, 30000);
   }
   if (document.readyState === 'complete') setTimeout(start, 1500);
   else window.addEventListener('load', function () { setTimeout(start, 1500); });
