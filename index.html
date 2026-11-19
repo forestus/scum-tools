@@ -2762,7 +2762,8 @@ if ('serviceWorker' in navigator && location.protocol === 'https:' && /github\.i
   function total(path) {
     if (!LIVE || !window.fetch) return Promise.resolve(null);
     var opt = {}; if (window.AbortSignal && AbortSignal.timeout) opt.signal = AbortSignal.timeout(8000);
-    return fetch(GC + '/counter/' + encodeURIComponent(path) + '.json', opt)
+    var end = new Date(Date.now() + 864e5).toISOString().slice(0, 10); // com datas o total vem atualizado; o fim nao entra
+    return fetch(GC + '/counter/' + encodeURIComponent(path) + '.json?start=2026-11-19&end=' + end, opt)
       .then(function (r) { return r.status === 404 ? { count: '0' } : (r.ok ? r.json() : null); })
       .then(function (j) { if (!j || j.count == null) return null; var n = parseInt(String(j.count).replace(/\D/g, ''), 10); return isNaN(n) ? null : n; })
       .catch(function () { return null; });
