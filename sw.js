@@ -1,6 +1,6 @@
 /* Hack do Bunker: funciona offline depois da primeira visita.
    A pagina e um arquivo so; busca a versao nova na rede e, sem internet, usa a guardada. */
-var CACHE = 'hack-bunker-v3';
+var CACHE = 'hack-bunker-v4';
 var ASSETS = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png',
   './icon-maskable-512.png', './apple-touch-icon.png', './favicon-32.png'];
 

@@ -151,6 +151,9 @@
   .answer .kicker { font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
   .answer .big { font-size: 1.7rem; font-weight: 700; color: var(--on); line-height: 1.15; }
   .answer.bad .big { color: var(--red); font-size: 1.15rem; }
+  .answer.warn .big { color: var(--warn); }
+  .answer.warn #ans-kicker { color: var(--warn); }
+  input.unsure { border-color: var(--warn); box-shadow: inset 0 0 0 2px var(--warn); }
   .answer.idle .big { color: var(--muted); font-size: 1.05rem; font-weight: 600; }
   .answer .meta { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; font-size: .85rem; color: var(--fg); }
   .chip { border-radius: 999px; padding: 2px 10px; font-size: .75rem; letter-spacing: .04em; border: 1px solid var(--edge); }
@@ -177,6 +180,9 @@
     font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; padding: 3px 8px; border-radius: 4px;
   }
   .shot-status { margin: 0; font-size: .85rem; color: var(--muted); min-height: 1.2em; }
+  .report { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: .3rem .7rem; font-size: .8rem; color: var(--muted); }
+  .report .ghost.small { font-size: .8rem; padding: .25rem .6rem; }
+  .report-msg.ok { color: var(--good, #6fd08c); } .report-msg.bad { color: var(--warn); }
   .shot-status.ok { color: var(--on); }
   .shot-status.warn { color: var(--warn); }
   .shot-status.bad { color: var(--red); }
@@ -356,7 +362,7 @@
   <header>
     <div class="brand">
       <h1 data-i18n="app.name">Hack do Bunker</h1>
-      <span class="fresh" id="fresh" data-date="2026-11-14"></span>
+      <span class="fresh" id="fresh" data-date="2026-11-19"></span>
     </div>
     <div class="tools">
       <label class="visually-hidden" for="lang-sel" data-i18n="lang.label">Idioma</label>
@@ -395,6 +401,7 @@
         <button class="ghost" id="btn-adjust-cancel" type="button" data-i18n="btn.cancel">Cancelar</button>
       </div>
       <p class="shot-status" id="shot-status" role="status">Print Screen no jogo, volte aqui e aperte Ctrl+V. Só isso.</p>
+      <p class="report" id="report" hidden><button class="ghost small" id="btn-report" type="button" data-i18n="rep.btn">Leitura errada? Enviar este print ao desenvolvedor</button><span class="report-msg" id="report-msg" role="status" aria-live="polite"></span></p>
     </section>
 
     <section class="side" aria-labelledby="side-title">
@@ -476,6 +483,9 @@ window.I18N = {
     'st.noClip': 'Não tem imagem copiada. No jogo, aperte Print Screen e depois Ctrl+V aqui.', 'st.readyPaste': 'Pronto para colar: aperte Ctrl+V.',
     'st.noCombo': 'Li o print, mas nenhuma combinação fecha. Confira as casas amarelas e os visores.',
     'st.checkCells': 'Pronto. Confira as {n} casa(s) em amarelo antes de puxar.', 'st.checkNums': 'Pronto. Confira os números dos visores antes de puxar.',
+    'st.doubt': "Leitura duvidosa: confira as {n} casa(s) em amarelo e os visores. A resposta pode estar errada.", 'ans.doubtKicker': "Leitura duvidosa · confira antes", 'ans.doubtMeta': "Confira as casas amarelas e os visores. Se estiver tudo certo, os visores devem mostrar {a} / {b} · depois puxe a alavanca",
+    'rep.btn': "Leitura errada? Enviar este print ao desenvolvedor", 'rep.sending': "Enviando o print…", 'rep.ok': "Enviado. Obrigado! Isso ajuda a corrigir o leitor.", 'rep.fail': "Não deu para enviar agora. Tente de novo mais tarde.", 'rep.note': "O print vai só para o criador do site, para melhorar o leitor.",
+    'st.doubtNums': "Leitura duvidosa nos visores: confira os números de cima. A resposta pode estar errada.",
     'st.okPrint': 'Pronto. Ligue os interruptores marcados em verde e puxe a alavanca.', 'st.okClaude': 'Lido pelo Claude. Confira os números antes de puxar.',
     'st.sendFirst': 'Envie ou cole um print primeiro.', 'st.claudeReading': 'Claude está lendo o print… costuma levar de 5 a 30 segundos.',
     'st.claudeIncomplete': 'A resposta do Claude veio incompleta. Tente de novo ou preencha as casas.', 'st.cancelled': 'Leitura cancelada.',
@@ -531,6 +541,9 @@ window.I18N = {
     'st.noClip': 'There is no image copied. In game, press Print Screen and then Ctrl+V here.', 'st.readyPaste': 'Ready to paste: press Ctrl+V.',
     'st.noCombo': 'I read the screenshot, but no combination works. Check the yellow cells and the displays.',
     'st.checkCells': 'Done. Check the {n} yellow cell(s) before pulling.', 'st.checkNums': 'Done. Check the display numbers before pulling.',
+    'st.doubt': "Uncertain reading: check the {n} yellow cell(s) and the displays. The answer may be wrong.", 'ans.doubtKicker': "Uncertain reading · check first", 'ans.doubtMeta': "Check the yellow cells and the displays. If they match, the displays should show {a} / {b} · then pull the lever",
+    'rep.btn': "Wrong reading? Send this screenshot to the developer", 'rep.sending': "Sending the screenshot…", 'rep.ok': "Sent. Thank you! This helps fix the reader.", 'rep.fail': "Couldn't send it now. Try again later.", 'rep.note': "The screenshot goes only to the site's creator, to improve the reader.",
+    'st.doubtNums': "Uncertain reading on the displays: check the numbers at the top. The answer may be wrong.",
     'st.okPrint': 'Done. Turn on the switches marked in green and pull the lever.', 'st.okClaude': 'Read by Claude. Check the numbers before pulling.',
     'st.sendFirst': 'Send or paste a screenshot first.', 'st.claudeReading': 'Claude is reading the screenshot… it usually takes 5 to 30 seconds.',
     'st.claudeIncomplete': 'Claude\'s answer was incomplete. Try again or fill in the cells.', 'st.cancelled': 'Reading cancelled.',
@@ -586,6 +599,9 @@ window.I18N = {
     'st.noClip': 'Es ist kein Bild kopiert. Drück im Spiel die Druck-Taste und dann hier Strg+V.', 'st.readyPaste': 'Bereit zum Einfügen: Strg+V drücken.',
     'st.noCombo': 'Screenshot gelesen, aber keine Kombination passt. Prüf die gelben Felder und die Anzeigen.',
     'st.checkCells': 'Fertig. Prüf die {n} gelben Felder vor dem Ziehen.', 'st.checkNums': 'Fertig. Prüf die Zahlen in den Anzeigen vor dem Ziehen.',
+    'st.doubt': "Unsichere Erkennung: Prüf die {n} gelben Felder und die Anzeigen. Die Antwort kann falsch sein.", 'ans.doubtKicker': "Unsichere Erkennung · erst prüfen", 'ans.doubtMeta': "Prüf die gelben Felder und die Anzeigen. Wenn alles stimmt, sollten die Anzeigen {a} / {b} zeigen · dann Hebel ziehen",
+    'rep.btn': "Falsch gelesen? Screenshot an den Entwickler senden", 'rep.sending': "Screenshot wird gesendet…", 'rep.ok': "Gesendet. Danke! Das hilft, den Leser zu verbessern.", 'rep.fail': "Senden hat gerade nicht geklappt. Versuch es später nochmal.", 'rep.note': "Der Screenshot geht nur an den Ersteller der Seite, um den Leser zu verbessern.",
+    'st.doubtNums': "Unsichere Erkennung der Anzeigen: Prüf die Zahlen oben. Die Antwort kann falsch sein.",
     'st.okPrint': 'Fertig. Schalte die grün markierten Schalter ein und zieh den Hebel.', 'st.okClaude': 'Von Claude gelesen. Prüf die Zahlen vor dem Ziehen.',
     'st.sendFirst': 'Schick oder füg zuerst einen Screenshot ein.', 'st.claudeReading': 'Claude liest den Screenshot… dauert meist 5 bis 30 Sekunden.',
     'st.claudeIncomplete': 'Claudes Antwort war unvollständig. Versuch es nochmal oder trag die Felder ein.', 'st.cancelled': 'Lesen abgebrochen.',
@@ -641,6 +657,9 @@ window.I18N = {
     'st.noClip': 'Изображение не скопировано. В игре нажмите Print Screen, затем здесь Ctrl+V.', 'st.readyPaste': 'Готово к вставке: нажмите Ctrl+V.',
     'st.noCombo': 'Скриншот прочитан, но ни одна комбинация не подходит. Проверьте жёлтые ячейки и дисплеи.',
     'st.checkCells': 'Готово. Проверьте жёлтые ячейки ({n}) перед рычагом.', 'st.checkNums': 'Готово. Проверьте числа на дисплеях перед рычагом.',
+    'st.doubt': "Ненадёжное распознавание: проверьте жёлтые ячейки ({n}) и дисплеи. Ответ может быть неверным.", 'ans.doubtKicker': "Ненадёжное распознавание · сначала проверьте", 'ans.doubtMeta': "Проверьте жёлтые ячейки и дисплеи. Если всё верно, дисплеи должны показать {a} / {b} · затем потяните рычаг",
+    'rep.btn': "Распознано неверно? Отправить скриншот разработчику", 'rep.sending': "Отправляю скриншот…", 'rep.ok': "Отправлено. Спасибо! Это помогает исправить распознавание.", 'rep.fail': "Сейчас не удалось отправить. Попробуйте позже.", 'rep.note': "Скриншот получит только автор сайта, чтобы улучшить распознавание.",
+    'st.doubtNums': "Ненадёжное распознавание дисплеев: проверьте числа сверху. Ответ может быть неверным.",
     'st.okPrint': 'Готово. Включите переключатели, отмеченные зелёным, и потяните рычаг.', 'st.okClaude': 'Прочитано Claude. Проверьте числа перед рычагом.',
     'st.sendFirst': 'Сначала отправьте или вставьте скриншот.', 'st.claudeReading': 'Claude читает скриншот… обычно 5–30 секунд.',
     'st.claudeIncomplete': 'Ответ Claude неполный. Попробуйте снова или заполните ячейки.', 'st.cancelled': 'Чтение отменено.',
@@ -696,6 +715,9 @@ window.I18N = {
     'st.noClip': 'Nie skopiowano obrazu. W grze naciśnij Print Screen, a potem tutaj Ctrl+V.', 'st.readyPaste': 'Gotowe do wklejenia: naciśnij Ctrl+V.',
     'st.noCombo': 'Odczytałem zrzut, ale żadna kombinacja nie pasuje. Sprawdź żółte pola i wyświetlacze.',
     'st.checkCells': 'Gotowe. Sprawdź żółte pola ({n}) przed pociągnięciem.', 'st.checkNums': 'Gotowe. Sprawdź liczby na wyświetlaczach przed pociągnięciem.',
+    'st.doubt': "Niepewny odczyt: sprawdź żółte pola ({n}) i wyświetlacze. Odpowiedź może być błędna.", 'ans.doubtKicker': "Niepewny odczyt · najpierw sprawdź", 'ans.doubtMeta': "Sprawdź żółte pola i wyświetlacze. Jeśli wszystko się zgadza, wyświetlacze powinny pokazać {a} / {b} · potem pociągnij dźwignię",
+    'rep.btn': "Źle odczytane? Wyślij ten zrzut twórcy", 'rep.sending': "Wysyłam zrzut…", 'rep.ok': "Wysłano. Dzięki! To pomaga poprawić odczyt.", 'rep.fail': "Nie udało się teraz wysłać. Spróbuj później.", 'rep.note': "Zrzut trafia tylko do twórcy strony, aby ulepszyć odczyt.",
+    'st.doubtNums': "Niepewny odczyt wyświetlaczy: sprawdź liczby u góry. Odpowiedź może być błędna.",
     'st.okPrint': 'Gotowe. Włącz przełączniki zaznaczone na zielono i pociągnij dźwignię.', 'st.okClaude': 'Odczytane przez Claude. Sprawdź liczby przed pociągnięciem.',
     'st.sendFirst': 'Najpierw wyślij lub wklej zrzut ekranu.', 'st.claudeReading': 'Claude odczytuje zrzut… zwykle trwa to 5–30 sekund.',
     'st.claudeIncomplete': 'Odpowiedź Claude jest niepełna. Spróbuj ponownie lub uzupełnij pola.', 'st.cancelled': 'Odczyt anulowany.',
@@ -751,6 +773,9 @@ window.I18N = {
     'st.noClip': 'Aucune image copiée. En jeu, appuyez sur Impr. écran puis sur Ctrl+V ici.', 'st.readyPaste': 'Prêt à coller : appuyez sur Ctrl+V.',
     'st.noCombo': 'Capture lue, mais aucune combinaison ne fonctionne. Vérifiez les cases jaunes et les afficheurs.',
     'st.checkCells': 'Prêt. Vérifiez les {n} case(s) jaune(s) avant de tirer.', 'st.checkNums': 'Prêt. Vérifiez les chiffres des afficheurs avant de tirer.',
+    'st.doubt': "Lecture incertaine : vérifiez les {n} case(s) jaune(s) et les afficheurs. La réponse peut être fausse.", 'ans.doubtKicker': "Lecture incertaine · vérifiez d’abord", 'ans.doubtMeta': "Vérifiez les cases jaunes et les afficheurs. Si tout est bon, les afficheurs doivent montrer {a} / {b} · puis tirez le levier",
+    'rep.btn': "Mauvaise lecture ? Envoyer cette capture au développeur", 'rep.sending': "Envoi de la capture…", 'rep.ok': "Envoyé. Merci ! Cela aide à corriger le lecteur.", 'rep.fail': "Impossible d'envoyer pour l'instant. Réessayez plus tard.", 'rep.note': "La capture est envoyée uniquement au créateur du site, pour améliorer le lecteur.",
+    'st.doubtNums': "Lecture incertaine des écrans : vérifiez les nombres en haut. La réponse peut être fausse.",
     'st.okPrint': 'Prêt. Activez les interrupteurs marqués en vert et tirez le levier.', 'st.okClaude': 'Lu par Claude. Vérifiez les chiffres avant de tirer.',
     'st.sendFirst': 'Envoyez ou collez d\'abord une capture.', 'st.claudeReading': 'Claude lit la capture… cela prend en général 5 à 30 secondes.',
     'st.claudeIncomplete': 'La réponse de Claude est incomplète. Réessayez ou remplissez les cases.', 'st.cancelled': 'Lecture annulée.',
@@ -806,6 +831,9 @@ window.I18N = {
     'st.noClip': 'No hay ninguna imagen copiada. En el juego, pulsa Impr Pant y luego Ctrl+V aquí.', 'st.readyPaste': 'Listo para pegar: pulsa Ctrl+V.',
     'st.noCombo': 'Leí la captura, pero ninguna combinación encaja. Revisa las casillas amarillas y los visores.',
     'st.checkCells': 'Listo. Revisa las {n} casilla(s) amarilla(s) antes de tirar.', 'st.checkNums': 'Listo. Revisa los números de los visores antes de tirar.',
+    'st.doubt': "Lectura dudosa: revisa las {n} casilla(s) amarilla(s) y los visores. La respuesta puede estar mal.", 'ans.doubtKicker': "Lectura dudosa · revisa antes", 'ans.doubtMeta': "Revisa las casillas amarillas y los visores. Si todo está bien, los visores deben mostrar {a} / {b} · luego tira de la palanca",
+    'rep.btn': "¿Lectura errónea? Enviar esta captura al desarrollador", 'rep.sending': "Enviando la captura…", 'rep.ok': "Enviado. ¡Gracias! Esto ayuda a corregir el lector.", 'rep.fail': "No se pudo enviar ahora. Inténtalo más tarde.", 'rep.note': "La captura solo llega al creador del sitio, para mejorar el lector.",
+    'st.doubtNums': "Lectura dudosa de las pantallas: revisa los números de arriba. La respuesta puede estar mal.",
     'st.okPrint': 'Listo. Enciende los interruptores marcados en verde y tira de la palanca.', 'st.okClaude': 'Leído por Claude. Revisa los números antes de tirar.',
     'st.sendFirst': 'Envía o pega una captura primero.', 'st.claudeReading': 'Claude está leyendo la captura… suele tardar de 5 a 30 segundos.',
     'st.claudeIncomplete': 'La respuesta de Claude llegó incompleta. Inténtalo de nuevo o rellena las casillas.', 'st.cancelled': 'Lectura cancelada.',
@@ -861,6 +889,9 @@ window.I18N = {
     'st.noClip': '没有复制到图片。在游戏中按 Print Screen，然后在这里按 Ctrl+V。', 'st.readyPaste': '可以粘贴了：按 Ctrl+V。',
     'st.noCombo': '已读取截图，但没有任何组合符合。请检查黄色格子和显示屏。',
     'st.checkCells': '完成。拉杆前请检查 {n} 个黄色格子。', 'st.checkNums': '完成。拉杆前请检查显示屏上的数字。',
+    'st.doubt': "识别不确定：请检查 {n} 个黄色格子和显示屏，答案可能有误。", 'ans.doubtKicker': "识别不确定 · 请先检查", 'ans.doubtMeta': "请检查黄色格子和显示屏。如果都正确，显示屏应显示 {a} / {b} · 然后拉下拉杆",
+    'rep.btn': "识别错了？把这张截图发给开发者", 'rep.sending': "正在发送截图…", 'rep.ok': "已发送，谢谢！这能帮助改进识别。", 'rep.fail': "现在无法发送，请稍后再试。", 'rep.note': "截图只会发给本站作者，用于改进识别。",
+    'st.doubtNums': "显示屏识别不确定：请核对上方的数字。答案可能有误。",
     'st.okPrint': '完成。打开绿色标记的开关，然后拉下拉杆。', 'st.okClaude': '已由 Claude 读取。拉杆前请检查数字。',
     'st.sendFirst': '请先发送或粘贴截图。', 'st.claudeReading': 'Claude 正在读取截图… 通常需要 5 到 30 秒。',
     'st.claudeIncomplete': 'Claude 的回答不完整。请重试或手动填写格子。', 'st.cancelled': '已取消读取。',
@@ -916,6 +947,9 @@ window.I18N = {
     'st.noClip': '沒有複製到圖片。在遊戲中按 Print Screen，然後在這裡按 Ctrl+V。', 'st.readyPaste': '可以貼上了：按 Ctrl+V。',
     'st.noCombo': '已讀取截圖，但沒有任何組合符合。請檢查黃色格子和顯示器。',
     'st.checkCells': '完成。拉桿前請檢查 {n} 個黃色格子。', 'st.checkNums': '完成。拉桿前請檢查顯示器上的數字。',
+    'st.doubt': "辨識不確定：請檢查 {n} 個黃色格子和顯示器，答案可能有誤。", 'ans.doubtKicker': "辨識不確定 · 請先檢查", 'ans.doubtMeta': "請檢查黃色格子和顯示器。如果都正確，顯示器應顯示 {a} / {b} · 然後拉下拉桿",
+    'rep.btn': "辨識錯了？把這張截圖傳給開發者", 'rep.sending': "正在傳送截圖…", 'rep.ok': "已傳送，謝謝！這能幫助改進辨識。", 'rep.fail': "現在無法傳送，請稍後再試。", 'rep.note': "截圖只會傳給本站作者，用於改進辨識。",
+    'st.doubtNums': "顯示器辨識不確定：請核對上方的數字。答案可能有誤。",
     'st.okPrint': '完成。打開綠色標記的開關，然後拉下拉桿。', 'st.okClaude': '已由 Claude 讀取。拉桿前請檢查數字。',
     'st.sendFirst': '請先傳送或貼上截圖。', 'st.claudeReading': 'Claude 正在讀取截圖… 通常需要 5 到 30 秒。',
     'st.claudeIncomplete': 'Claude 的回答不完整。請重試或手動填寫格子。', 'st.cancelled': '已取消讀取。',
@@ -971,6 +1005,9 @@ window.I18N = {
     'st.noClip': 'ยังไม่ได้คัดลอกรูปภาพ ในเกมกด Print Screen แล้วกด Ctrl+V ที่นี่', 'st.readyPaste': 'พร้อมวางแล้ว: กด Ctrl+V',
     'st.noCombo': 'อ่านภาพแล้ว แต่ไม่มีชุดค่าใดตรงกัน ตรวจช่องสีเหลืองและหน้าจอแสดงผล',
     'st.checkCells': 'เสร็จแล้ว ตรวจช่องสีเหลือง {n} ช่องก่อนดึงคันโยก', 'st.checkNums': 'เสร็จแล้ว ตรวจตัวเลขบนหน้าจอแสดงผลก่อนดึงคันโยก',
+    'st.doubt': "อ่านไม่แน่ใจ: ตรวจช่องสีเหลือง {n} ช่องและหน้าจอ คำตอบอาจผิด", 'ans.doubtKicker': "อ่านไม่แน่ใจ · ตรวจก่อน", 'ans.doubtMeta': "ตรวจช่องสีเหลืองและหน้าจอ ถ้าถูกต้อง หน้าจอควรแสดง {a} / {b} · แล้วดึงคันโยก",
+    'rep.btn': "อ่านผิดใช่ไหม? ส่งภาพหน้าจอนี้ให้ผู้พัฒนา", 'rep.sending': "กำลังส่งภาพหน้าจอ…", 'rep.ok': "ส่งแล้ว ขอบคุณ! ช่วยให้แก้ตัวอ่านได้", 'rep.fail': "ส่งไม่ได้ตอนนี้ ลองใหม่ภายหลัง", 'rep.note': "ภาพหน้าจอจะส่งถึงผู้สร้างเว็บเท่านั้น เพื่อปรับปรุงตัวอ่าน",
+    'st.doubtNums': "อ่านจอแสดงผลไม่แน่ใจ: ตรวจตัวเลขด้านบน คำตอบอาจผิด",
     'st.okPrint': 'เสร็จแล้ว เปิดสวิตช์ที่ทำเครื่องหมายสีเขียว แล้วดึงคันโยก', 'st.okClaude': 'Claude อ่านแล้ว ตรวจตัวเลขก่อนดึงคันโยก',
     'st.sendFirst': 'ส่งหรือวางภาพหน้าจอก่อน', 'st.claudeReading': 'Claude กำลังอ่านภาพ… ปกติใช้เวลา 5 ถึง 30 วินาที',
     'st.claudeIncomplete': 'คำตอบของ Claude ไม่ครบ ลองใหม่หรือกรอกช่องเอง', 'st.cancelled': 'ยกเลิกการอ่านแล้ว',
@@ -2003,6 +2040,9 @@ window.BUNKER_EXAMPLE_IMG = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/
   var rows = []; for (var i = 0; i < ROWS; i++) rows.push([null, null]);
   var cursor = null; // {r, c}
   var unsure = {};   // casas que o leitor do print nao teve certeza ('linha-coluna')
+  var numUnsure = {}; // visores (in-input, in-a, in-b) que o leitor nao teve certeza
+  // leitura ruim demais para mostrar a resposta como certa
+  function doubtful() { return Object.keys(unsure).length >= 4 || Object.keys(numUnsure).length > 0; }
 
   var EXAMPLE = { input: 60, a: 70, b: 28,
     rows: [['', '-20'], ['/2', '+80'], ['', '-10'], ['+40', '/2'], ['*2', ''], ['-60', '/2'], ['/2', '-40'], ['/2', '/2']] };
@@ -2092,7 +2132,7 @@ window.BUNKER_EXAMPLE_IMG = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/
   function setCell(r, c, op) { rows[r][c] = op; delete unsure[r + '-' + c]; solve(); }
 
   ['in-input', 'in-a', 'in-b'].forEach(function (id) {
-    document.getElementById(id).addEventListener('input', solve);
+    document.getElementById(id).addEventListener('input', function () { delete numUnsure[id]; solve(); });
   });
   document.querySelectorAll('[data-sign]').forEach(function (b) {
     b.addEventListener('click', function () {
@@ -2174,7 +2214,13 @@ window.BUNKER_EXAMPLE_IMG = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/
       }
     }
     render(res.switches, trail);
+    ['in-input', 'in-a', 'in-b'].forEach(function (id) { document.getElementById(id).classList.toggle('unsure', !!numUnsure[id]); });
     var big = res.switches.length ? t('ans.turnOn', { list: res.switches.join(' · ') }) : t('ans.none');
+    if (doubtful()) { // leitura ruim: mostra o palpite, mas nunca como resposta certa
+      setAnswer('warn', t('ans.doubtKicker'), big,
+        t('ans.doubtMeta', { a: '<span class="lcd-inline" id="disp-a">' + fmt(res.displayA) + '</span>', b: '<span class="lcd-inline" id="disp-b">' + fmt(res.displayB) + '</span>' }));
+      return;
+    }
     var chip = res.robust
       ? '<span class="chip ok">' + t('chip.exact') + '</span>'
       : '<span class="chip warn">' + t('chip.round') + '</span>';
@@ -2198,7 +2244,61 @@ window.BUNKER_EXAMPLE_IMG = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/
     el.textContent = statusState.key ? t(statusState.key, statusState.vars) + (statusState.hint && sampleReady ? t('st.claudeHint') : '') : '';
     el.className = 'shot-status' + (statusState.kind ? ' ' + statusState.kind : '');
   }
-  function setStatus(key, kind, vars, hint) { statusState = { key: key, kind: kind || '', vars: vars || null, hint: !!hint }; renderStatus(); }
+  function setStatus(key, kind, vars, hint) { statusState = { key: key, kind: kind || '', vars: vars || null, hint: !!hint }; renderStatus(); updateReport(); }
+
+  /* ---------- Envio do print com leitura errada (so quando o jogador clica) ---------- */
+  // Script do Google do criador do site: guarda o print numa pasta do Drive dele e manda um e-mail.
+  var REPORT_URL = 'https://script.google.com/macros/s/AKfycbw3qHiCS3ljnIlcoipSUcRcCYhy_39EIvkel8VXrwPnd_0sg966VF__HeIjqg0e6ILw/exec';
+  var READ_DONE = ['st.okPrint', 'st.checkCells', 'st.checkNums', 'st.noCombo', 'st.doubt', 'st.doubtNums', 'st.notFound', 'st.noPanel', 'st.tooSmall', 'st.format'];
+  var reportSent = null, failCounted = null; // um envio e uma contagem por print
+  var FAIL_KEYS = ['st.noCombo', 'st.doubt', 'st.doubtNums', 'st.notFound', 'st.noPanel', 'st.tooSmall', 'st.format'];
+  function updateReport() {
+    var box = document.getElementById('report'); if (!box) return;
+    var show = !!(REPORT_URL && lastFile && READ_DONE.indexOf(statusState.key) >= 0);
+    box.hidden = !show; document.getElementById('btn-report').title = t('rep.note');
+    if (show && reportSent !== lastFile) { document.getElementById('btn-report').disabled = false; setReportMsg('', ''); }
+    // conta (sem imagem) as leituras que deram problema, uma vez por print
+    if (show && failCounted !== lastFile && FAIL_KEYS.indexOf(statusState.key) >= 0 && window.ScumStats && ScumStats.event) {
+      failCounted = lastFile; try { ScumStats.event('leitura-problema', 'Leitura com problema'); } catch (e) {}
+    }
+  }
+  function setReportMsg(key, kind) { var m = document.getElementById('report-msg'); m.textContent = key ? t(key) : ''; m.className = 'report-msg' + (kind ? ' ' + kind : ''); }
+  function fileDataUrl(file) {
+    return new Promise(function (resolve, reject) {
+      if (file.size <= 9 * 1024 * 1024 && /^image\/(png|jpeg|webp)$/.test(file.type)) {
+        var fr = new FileReader(); fr.onload = function () { resolve(fr.result); }; fr.onerror = reject; fr.readAsDataURL(file); return;
+      }
+      fileToCanvas(file).then(function (c) { resolve(c.toDataURL('image/jpeg', 0.92)); }, reject); // grande demais ou outro formato
+    });
+  }
+  function readingSnapshot() {
+    var cellsTxt = [];
+    for (var r = 0; r < ROWS; r++) for (var c = 0; c < 2; c++) {
+      var el = document.getElementById('cell-' + (r + 1) + '-' + (c ? 'b' : 'a')), txt = '';
+      el.childNodes.forEach(function (n) { if (!(n.classList && n.classList.contains('visually-hidden'))) txt += n.textContent; });
+      cellsTxt.push(txt.trim() || '·');
+    }
+    var v = function (id) { var e = document.getElementById(id); return e ? e.value : ''; };
+    return {
+      status: statusState.key, input: v('in-input'), a: v('in-a'), b: v('in-b'), cells: cellsTxt.join(' '),
+      yellow: Object.keys(unsure), visoresDuvida: Object.keys(numUnsure), answer: (document.getElementById('answer') || {}).innerText || '',
+      file: { name: lastFile && lastFile.name, type: lastFile && lastFile.type, size: lastFile && lastFile.size },
+      lang: window.LANG, ua: navigator.userAgent, screen: screen.width + 'x' + screen.height + '@' + (window.devicePixelRatio || 1),
+      page: location.href, when: new Date().toISOString()
+    };
+  }
+  document.getElementById('btn-report').addEventListener('click', function () {
+    var btn = this, file = lastFile; if (!file || !REPORT_URL) return;
+    btn.disabled = true; setReportMsg('rep.sending', '');
+    var meta = readingSnapshot();
+    fileDataUrl(file).then(function (img) {
+      return fetch(REPORT_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ img: img, meta: meta }) });
+    }).then(function (r) { return r.json(); }).then(function (j) {
+      if (!j || !j.ok) throw new Error(j && j.err || 'falhou');
+      reportSent = file; setReportMsg('rep.ok', 'ok');
+      if (window.ScumStats && ScumStats.event) try { ScumStats.event('print-enviado', 'Print com erro enviado'); } catch (e) {}
+    }).catch(function () { btn.disabled = false; setReportMsg('rep.fail', 'bad'); });
+  });
   function setTag(key) { tagKey = key || ''; var el = document.getElementById('view-tag'); el.textContent = tagKey ? t(tagKey) : ''; el.hidden = !tagKey; }
   function setNote(key) { noteKey = key; document.getElementById('note').innerHTML = t(key); }
 
@@ -2294,8 +2394,12 @@ window.BUNKER_EXAMPLE_IMG = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/
         // foto de celular pode ter 12+ megapixels: reduz para no maximo 3200 px (ainda sobra nitidez)
         var w = im.naturalWidth, h = im.naturalHeight;
         var f = Math.min(1, (w / h >= 1.5 ? 5200 : 3200) / Math.max(w, h)); // print largo fica inteiro
+        // print de tela pequeno (notebook 768p, video 800p): amplia ate 1440 de altura, a escala em que o leitor
+        // foi calibrado; abaixo disso ele confunde '*' com '+' e '8' com '6'. Prints de 1080 ou mais ficam como estao.
+        if (h < 1000 && w / h >= 1.2) f = Math.min(1440 / h, 5200 / w);
         var c = document.createElement('canvas'); c.width = Math.round(w * f); c.height = Math.round(h * f);
-        c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); URL.revokeObjectURL(url); resolve(c);
+        var cx = c.getContext('2d'); cx.imageSmoothingEnabled = true; cx.imageSmoothingQuality = 'high';
+        cx.drawImage(im, 0, 0, c.width, c.height); URL.revokeObjectURL(url); resolve(c);
       };
       im.onerror = function () { URL.revokeObjectURL(url); reject(new Error('imagem')); };
       im.src = url;
@@ -2313,23 +2417,24 @@ window.BUNKER_EXAMPLE_IMG = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/
     setStatus('st.reading', '');
     fileToCanvas(file).then(function (full) {
       var w = full.width, h = full.height, aspect = w / h;
-      unsure = {};
-      // 1) print 21:9 inteiro: leitura direta, como sempre foi
-      if (aspect > 2.2 && aspect < 2.5) {
-        var data = full.getContext('2d').getImageData(0, 0, w, h);
-        var res = RD.read({ data: data.data, width: w, height: h, channels: 4 }, TPL);
-        if (res.looksLikePanel) {
-          var f = RD.frame({ width: w, height: h });
-          shot = { img: full, sx: f.ox + VIEW.x0 * f.s, sy: VIEW.y0 * f.s, sw: VW * f.s, sh: VH * f.s, aligned: true, full: full };
-          lastPhoto = null; setTag('');
-          applyReading(res, 'print');
-          return;
+      unsure = {}; numUnsure = {};
+      // 1) print da tela inteira, em qualquer formato (21:9, 16:9, 16:10, 4:3, 32:9...): o jogo mantem a altura
+      //    da visao, entao o painel ocupa sempre a mesma fracao da altura e fica centralizado -> leitura direta
+      var direct = null;
+      if (aspect > 1.2 && aspect < 4) {
+        direct = readDirect(full, { x: 0, y: 0, w: w, h: h });
+        // print de janela (Alt+PrintScreen): tira a barra de titulo e as bordas e tenta de novo
+        if (!direct || direct.res.unsure.length >= 4) {
+          var r = windowContent(full);
+          if (r) { var d2 = readDirect(full, r); if (d2 && (!direct || d2.res.unsure.length < direct.res.unsure.length)) direct = d2; }
         }
       }
-      // 2) qualquer outra imagem (16:9, recorte, janela, foto do monitor): acha o painel e endireita
       lastPhoto = { canvas: full, corners: null };
+      if (direct && direct.res.unsure.length < 4) { useDirect(direct); return; }
+      // 2) leitura direta duvidosa ou impossivel (recorte, janela, foto do monitor): acha o painel e endireita,
+      //    e fica com a leitura que tiver menos duvidas
       setStatus('st.locating', '');
-      setTimeout(function () { locateAndRead(null); }, 30);
+      setTimeout(function () { locateAndRead(null, direct); }, 30);
     }).catch(function () { setStatus('st.openFail', 'bad'); });
   }
 
@@ -2361,9 +2466,44 @@ window.BUNKER_EXAMPLE_IMG = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/
   function clearFields() {
     ['in-input', 'in-a', 'in-b'].forEach(function (id) { document.getElementById(id).value = ''; });
     for (var r = 0; r < ROWS; r++) rows[r] = [null, null];
-    unsure = {}; lastRes = null; setNote('note.default'); solve();
+    unsure = {}; numUnsure = {}; lastRes = null; setNote('note.default'); solve();
   }
-  function locateAndRead(manual) {
+  function readDirect(full, r) {
+    var data = full.getContext('2d').getImageData(r.x, r.y, r.w, r.h);
+    var res = RD.read({ data: data.data, width: r.w, height: r.h, channels: 4 }, TPL);
+    if (!res.looksLikePanel) return null;
+    var f = RD.frame({ width: r.w, height: r.h });
+    return { res: res, shot: { img: full, sx: r.x + f.ox + VIEW.x0 * f.s, sy: r.y + VIEW.y0 * f.s, sw: VW * f.s, sh: VH * f.s, aligned: true, full: full } };
+  }
+  // acha a borda mais forte perto de cada lado (barra de titulo em cima, molduras finas nos lados)
+  function windowContent(full) {
+    var w = full.width, h = full.height, px = full.getContext('2d').getImageData(0, 0, w, h).data;
+    function lum(x, y) { var i = (y * w + x) * 4; return px[i] * 0.3 + px[i + 1] * 0.59 + px[i + 2] * 0.11; }
+    function edge(n, maxK, line) { // line(k, t) -> luminancia do ponto t da linha k
+      var best = 0, at = 0, len = line.len;
+      for (var k = 1; k <= maxK; k++) {
+        var sum = 0, step = Math.max(1, Math.floor(len / 400));
+        for (var t = 0; t < len; t += step) sum += Math.abs(line(k, t) - line(k - 1, t));
+        var m = sum / Math.ceil(len / step); if (m > best) { best = m; at = k; }
+      }
+      return best > 12 ? at : 0;
+    }
+    var row = function (k, t) { return lum(t, k); }; row.len = w;
+    var rowB = function (k, t) { return lum(t, h - 1 - k); }; rowB.len = w;
+    var col = function (k, t) { return lum(k, t); }; col.len = h;
+    var colR = function (k, t) { return lum(w - 1 - k, t); }; colR.len = h;
+    var top = edge(0, Math.round(h * 0.06), row), bot = edge(0, Math.round(h * 0.02), rowB);
+    var left = edge(0, Math.round(w * 0.012), col), right = edge(0, Math.round(w * 0.012), colR);
+    if (top < 8) return null; // sem barra de titulo: nao e print de janela
+    var r = { x: left, y: top, w: w - left - right, h: h - top - bot };
+    return r.w / r.h > 1.2 && r.w / r.h < 4 ? r : null;
+  }
+  function useDirect(direct) {
+    shot = direct.shot; setTag('');
+    btnAdjust.hidden = false; // se a leitura vier errada, da para ajustar a posicao na mao
+    applyReading(direct.res, 'print');
+  }
+  function locateAndRead(manual, direct) {
     var full = lastPhoto.canvas, w = full.width, h = full.height;
     var id = full.getContext('2d').getImageData(0, 0, w, h);
     var img = { data: id.data, width: w, height: h, channels: 4 }, loc = null;
@@ -2375,6 +2515,7 @@ window.BUNKER_EXAMPLE_IMG = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/
         if (!loc || loc.score < 0.45) loc = { corners: manual, score: 1, photo: true };
       }
     } catch (e) { loc = manual ? { corners: manual, score: 1, photo: true } : null; }
+    if ((!loc || loc.score < 0.45) && direct) { useDirect(direct); return; }
     if (!loc || loc.score < 0.45) {
       lastPhoto.corners = manual || (loc && loc.score > 0.25 ? loc.corners : defaultCorners(w, h));
       shot = null; clearFields(); enterAdjust(); setStatus('st.notFound', 'warn');
@@ -2389,14 +2530,15 @@ window.BUNKER_EXAMPLE_IMG = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/
     vc.getContext('2d').putImageData(vd, 0, 0);
     shot = { img: vc, sx: 0, sy: 0, sw: VW, sh: VH, aligned: true, full: vc };
     setTag(''); btnAdjust.hidden = false;
-    if (span < 600) { clearFields(); setStatus('st.tooSmall', 'warn'); return; } // numeros pequenos demais: melhor nao chutar
+    if (span < 600) { if (direct) { useDirect(direct); return; } clearFields(); setStatus('st.tooSmall', 'warn'); return; } // numeros pequenos demais: melhor nao chutar
     var photo = loc.photo || !looksScreen(w, h);
     var opts = photo ? { strict: { d: 0.03, m: 0.012 } } : null;
     var A = RD.read(sharpen(rect), TPL, null, opts), B = RD.read(rect, TPL, null, opts);
-    if (!A.looksLikePanel) { clearFields(); setStatus('st.notFound', 'warn'); return; }
+    if (!A.looksLikePanel) { if (direct) { useDirect(direct); return; } clearFields(); setStatus('st.notFound', 'warn'); return; }
     // as duas leituras (com e sem nitidez) discordam numa casa? entao ela vai para "confira"
     for (var r = 0; r < 8; r++) for (var c = 0; c < 2; c++) if (A.rows[r][c] !== B.rows[r][c]) A.unsure.push('linha ' + (r + 1) + (c ? ' azul' : ' vermelho'));
     [['input', 'Input'], ['a', 'Output A'], ['b', 'Output B']].forEach(function (q) { if (A[q[0]] !== B[q[0]]) A.unsure.push(q[1]); });
+    if (direct && direct.res.unsure.length <= A.unsure.length) { useDirect(direct); return; } // a leitura direta ainda e melhor
     applyReading(A, photo ? 'photo' : 'print');
   }
 
@@ -2481,6 +2623,14 @@ window.BUNKER_EXAMPLE_IMG = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/
       res.alts.cells[k].forEach(function (q) { opts.push({ key: k, m: q.m, set: function (cfg) { var rc = k.split('-'); cfg.rows[+rc[0]][+rc[1]] = q.t; } }); });
     });
     ['input', 'a', 'b'].forEach(function (n) { (res.alts[n] || []).forEach(function (q) { opts.push({ key: n, m: q.m, set: function (cfg) { cfg[n] = q.t; } }); }); });
+    ['input', 'a', 'b'].forEach(function (n) { // o leitor as vezes parte um digito em dois: tenta tirar um caractere
+      var txt = String(res[n]);
+      for (var i = 0; i < txt.length; i++) {
+        var t2 = txt.slice(0, i) + txt.slice(i + 1);
+        if (!/^-?\d+$/.test(t2)) continue;
+        (function (v) { opts.push({ key: n, m: txt[i] === '-' ? 0.06 : 0.05, set: function (cfg) { cfg[n] = v; } }); })(parseInt(t2, 10));
+      }
+    });
     opts.sort(function (x, y) { return x.m - y.m; });
     for (var i = 0; i < opts.length; i++) { var c1 = clone(); opts[i].set(c1); if (ok(c1)) return { cfg: c1, keys: [opts[i].key] }; }
     var tries = 0;
@@ -2514,12 +2664,15 @@ window.BUNKER_EXAMPLE_IMG = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/
     (res.unsure || []).forEach(function (u) {
       var m = /linha (\d) (azul|vermelho)/.exec(u);
       if (m) unsure[(m[1] - 1) + '-' + (m[2] === 'azul' ? 1 : 0)] = 1;
+      var nm = { 'Input': 'in-input', 'Output A': 'in-a', 'Output B': 'in-b' }[u];
+      if (nm) numUnsure[nm] = 1;
     });
     setNote(source === 'claude' ? 'note.claude' : source === 'photo' ? 'note.photo' : 'note.print');
     solve();
     if (window.ScumStats) ScumStats.read(source);
     var nU = Object.keys(unsure).length, numU = (res.unsure || []).filter(function (u) { return !/linha/.test(u); });
     if (!lastRes || !lastRes.ok) setStatus('st.noCombo', 'bad');
+    else if (doubtful()) setStatus(nU ? 'st.doubt' : 'st.doubtNums', 'warn', { n: nU });
     else if (nU || numU.length) setStatus(nU ? 'st.checkCells' : 'st.checkNums', 'warn', { n: nU });
     else setStatus(source === 'claude' ? 'st.okClaude' : 'st.okPrint', 'ok');
   }
@@ -2636,7 +2789,7 @@ window.BUNKER_EXAMPLE_IMG = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/
     }).then(function (v) {
       var okRows = v && Array.isArray(v.rows) && v.rows.length === 8 && v.rows.every(function (p) { return Array.isArray(p) && p.length === 2; });
       if (!okRows || !isFinite(+v.input) || !isFinite(+v.a) || !isFinite(+v.b)) { setStatus('st.claudeIncomplete', 'bad'); return; }
-      unsure = {};
+      unsure = {}; numUnsure = {};
       applyReading({ input: +v.input, a: +v.a, b: +v.b, rows: v.rows.map(function (p) { return [String(p[0] || ''), String(p[1] || '')]; }), unsure: [] }, 'claude');
     }).catch(function (e) {
       var code = e && e.code;
@@ -2660,7 +2813,7 @@ window.BUNKER_EXAMPLE_IMG = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/
     document.getElementById('in-b').value = '';
     for (var r = 0; r < ROWS; r++) rows[r] = [null, null];
     stopCam(); exitAdjust(false); lastPhoto = null; btnAdjust.hidden = true;
-    unsure = {}; shot = null; setTag(''); setStatus('st.idle', '');
+    unsure = {}; numUnsure = {}; shot = null; setTag(''); setStatus('st.idle', '');
     setNote('note.default');
     solve();
     document.getElementById('in-input').focus();
@@ -2668,7 +2821,7 @@ window.BUNKER_EXAMPLE_IMG = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/
   document.getElementById('btn-clear').addEventListener('click', clearAll);
   document.getElementById('btn-example').addEventListener('click', function () {
     stopCam(); exitAdjust(false); lastPhoto = null; btnAdjust.hidden = true;
-    unsure = {}; shot = exampleShot; setTag('tag.example');
+    unsure = {}; numUnsure = {}; shot = exampleShot; setTag('tag.example');
     setStatus('st.idle', '');
     load(EXAMPLE);
     setNote('note.example');
@@ -2782,6 +2935,7 @@ if ('serviceWorker' in navigator && location.protocol === 'https:' && /github\.i
         if (seen[sig]) return; seen[sig] = 1; send('painel-resolvido', 'Painel resolvido');
       }, 2500);
     },
+    event: function (path, title) { send(path, title || path); },
     read: function (source) { if (source === 'claude') send('print-lido-claude', 'Print lido (Claude)'); else send('print-lido', 'Print lido'); }
   };
 
